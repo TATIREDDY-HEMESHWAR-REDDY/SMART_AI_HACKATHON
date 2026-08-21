@@ -31,3 +31,15 @@ export const submitAssessmentSchema = z.object({
 });
 
 export type SubmitAssessmentInput = z.infer<typeof submitAssessmentSchema>;
+
+export const uploadResumeSchema = z.object({
+  fileName: z.string().min(1, 'File name is required'),
+});
+
+export type UploadResumeInput = z.infer<typeof uploadResumeSchema>;
+
+export const analyzeResumeSchema = z.object({
+  resumeId: z.string().uuid(),
+});
+
+export type AnalyzeResumeInput = z.infer<typeof analyzeResumeSchema>;

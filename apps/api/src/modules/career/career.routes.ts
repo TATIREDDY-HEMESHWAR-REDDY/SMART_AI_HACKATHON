@@ -376,6 +376,86 @@ export default async function careerRoutes(server: FastifyInstance) {
     return response;
   });
 
+  // ==========================================
+  // MODULE N: RESUME
+  // ==========================================
+  server.get('/resume/me', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+    
+    const resumes = await prisma.resume.findMany({
+      where: { studentId },
+      include: { analysis: true },
+      orderBy: { createdAt: 'desc' }
+    });
+    return { success: true, data: { resumes } };
+  });
+
+  server.post('/resume', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const { uploadResumeSchema } = await import('./career.schema');
+    const parsed = uploadResumeSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0].message } });
+    
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+
+    // Mock storage URL abstraction
+    const fileUrl = `https://storage.campus-os.edu/resumes/${studentId}/${Date.now()}-${parsed.data.fileName}`;
+    
+    const resume = await prisma.resume.create({
+      data: {
+        studentId,
+        fileUrl,
+        isPrimary: true // Make new resume primary by default
+      }
+    });
+    
+    // Set other resumes to not primary
+    await prisma.resume.updateMany({
+      where: { studentId, id: { not: resume.id } },
+      data: { isPrimary: false }
+    });
+
+    return { success: true, data: { resume } };
+  });
+
+  server.post('/resume/:id/analyze', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request: any, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+
+    const resumeId = request.params.id;
+    
+    const resume = await prisma.resume.findUnique({ where: { id: resumeId } });
+    if (!resume || resume.studentId !== studentId) {
+      return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Resume not found' } });
+    }
+
+    // Mock Deterministic ATS Analysis
+    const atsScore = Math.floor(Math.random() * 31) + 65; // 65-95 score
+    const feedback = {
+      summary: 'A strong resume with good technical foundation, but lacks business impact metrics.',
+      projectBulletSuggestions: [
+        'Instead of "Built a backend", use "Architected a Node.js backend supporting 10k concurrent users."',
+        'Quantify your AWS deployment (e.g., reduced latency by 40%).'
+      ],
+      atsKeywordMatch: atsScore > 80 ? 'High compatibility with typical AI Engineer roles' : 'Missing some key cloud technology keywords',
+      jobSpecificImprovements: [
+        'Add specific mention of Docker or Kubernetes if applying for cloud roles.',
+        'Ensure React/Next.js are explicitly listed in a skills section.'
+      ],
+      strengths: ['Clear formatting', 'Strong action verbs used in experience section'],
+      improvements: ['Add more quantifiable metrics', 'Missing core keywords for target role']
+    };
+
+    const analysis = await prisma.resumeAnalysis.upsert({
+      where: { resumeId },
+      create: { resumeId, atsScore, feedback },
+      update: { atsScore, feedback, analyzedAt: new Date() }
+    });
+
+    return { success: true, data: { analysis } };
+  });
+
   // GET /api/v1/career/analytics/dashboard
   // Roles: TPO, FACULTY
   server.get('/analytics/dashboard', {
