@@ -164,21 +164,26 @@ export const careerDataLayer = {
       });
   },
 
+  // ==========================================
+  // READINESS
+  // ==========================================
+
   getReadinessScore: async (studentId: string) => {
-    // Mock readiness based on whether they have results
+    // The frozen specification requires a Readiness Summary but does NOT define a numerical formula.
+    // Returning a deterministic summary of metrics instead of a fabricated score.
+    const goals = await careerDataLayer.getCareerGoalsByStudent(studentId);
     const results = mockAssessmentResults.filter(ar => ar.studentId === studentId);
-    if (results.length === 0) {
-      return { score: 0, status: 'Needs Assessment', lastUpdated: new Date().toISOString() };
-    }
-    const avgScore = results.reduce((acc, r) => acc + r.score, 0) / results.length;
-    let status = 'Needs Improvement';
-    if (avgScore >= 80) status = 'Ready';
-    else if (avgScore >= 60) status = 'On Track';
+    const skills = await careerDataLayer.getStudentSkills(studentId);
     
     return {
-      score: Math.round(avgScore),
-      status,
-      lastUpdated: results[results.length - 1].completedAt
+      score: null, // TEAM LEAD CLARIFICATION REQUIRED: Career Readiness scoring formula.
+      status: 'Pending Team Lead Formula',
+      metrics: {
+        hasCareerGoal: goals.length > 0,
+        assessmentsCompleted: results.length,
+        skillsAcquired: skills.length
+      },
+      lastUpdated: new Date().toISOString()
     };
   }
 };
