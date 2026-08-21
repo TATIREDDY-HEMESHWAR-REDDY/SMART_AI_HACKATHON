@@ -6,6 +6,7 @@ import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 import { Institution } from './pages/Institution';
 import { Profile } from './pages/Profile';
+import { Academics } from './pages/Academics';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
@@ -97,6 +98,12 @@ export const App = () => {
           <Route path="/profile" element={<Profile />} />
 
           <Route path="/attendance" element={<Attendance />} />
+          
+          <Route path="/academics" element={
+            <RoleGuard allowedRoles={['STUDENT', 'FACULTY']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Academics />
+            </RoleGuard>
+          } />
           
           <Route path="/placement" element={
             <RoleGuard allowedRoles={['STUDENT', 'TPO', 'RECRUITER']} userRoles={['STUDENT']}>

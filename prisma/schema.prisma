@@ -120,8 +120,9 @@ model StudentProfile {
   
   enrollments      CourseEnrollment[]
   attendance       AttendanceRecord[]
+  examResults      ExamResult[]
 
-  createdAt        DateTime @default(now())
+  createdAt        DateTime         @default(now())
   updatedAt        DateTime @updatedAt
 }
 
@@ -157,6 +158,9 @@ model Course {
   
   enrollments  CourseEnrollment[]
   sessions     ClassSession[]
+  timetable    TimetableEntry[]
+  assignments  Assignment[]
+  exams        Exam[]
   
   createdAt    DateTime           @default(now())
   updatedAt    DateTime           @updatedAt
@@ -202,4 +206,49 @@ model AttendanceRecord {
   updatedAt DateTime         @updatedAt
 
   @@unique([sessionId, studentId])
+}
+
+// ==========================================
+// MODULE D: ACADEMICS (NEW)
+// ==========================================
+
+model TimetableEntry {
+  id        String   @id @default(uuid())
+  dayOfWeek Int      // 1=Monday, 5=Friday
+  startTime String   // e.g., "10:00"
+  endTime   String   // e.g., "11:30"
+  roomId    String?  // Room number/name
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+}
+
+model Assignment {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  dueDate     DateTime
+  maxScore    Float    @default(100)
+  courseId    String
+  course      Course   @relation(fields: [courseId], references: [id])
+}
+
+model Exam {
+  id        String   @id @default(uuid())
+  name      String   // e.g., "Midterm 1"
+  date      DateTime
+  maxMarks  Float    @default(100)
+  courseId  String
+  course    Course   @relation(fields: [courseId], references: [id])
+  results   ExamResult[]
+}
+
+model ExamResult {
+  id            String         @id @default(uuid())
+  marksObtained Float
+  examId        String
+  exam          Exam           @relation(fields: [examId], references: [id])
+  studentId     String
+  student       StudentProfile @relation(fields: [studentId], references: [id])
+  
+  @@unique([examId, studentId])
 }

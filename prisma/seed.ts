@@ -104,6 +104,56 @@ async function main() {
     }
   });
 
+  // Seed Timetable
+  await prisma.timetableEntry.create({
+    data: {
+      dayOfWeek: 1, // Monday
+      startTime: '10:00',
+      endTime: '11:30',
+      roomId: 'Room 304',
+      courseId: course.id
+    }
+  });
+  
+  await prisma.timetableEntry.create({
+    data: {
+      dayOfWeek: 3, // Wednesday
+      startTime: '10:00',
+      endTime: '11:30',
+      roomId: 'Room 304',
+      courseId: course.id
+    }
+  });
+
+  // Seed Assignment
+  await prisma.assignment.create({
+    data: {
+      title: 'Project Setup & Architecture',
+      description: 'Initialize a basic monorepo with Turborepo.',
+      dueDate: new Date(new Date().setDate(new Date().getDate() + 7)),
+      courseId: course.id,
+      maxScore: 100
+    }
+  });
+
+  // Seed Exam & Result
+  const exam = await prisma.exam.create({
+    data: {
+      name: 'Midterm Evaluation',
+      date: new Date(new Date().setDate(new Date().getDate() - 5)),
+      maxMarks: 100,
+      courseId: course.id
+    }
+  });
+
+  await prisma.examResult.create({
+    data: {
+      marksObtained: 92,
+      examId: exam.id,
+      studentId: studentUser.studentProfile!.id
+    }
+  });
+
   console.log('✅ Seeding complete!');
   console.log('Login credentials:');
   console.log('  STUDENT: student@hvk.edu / password123');
