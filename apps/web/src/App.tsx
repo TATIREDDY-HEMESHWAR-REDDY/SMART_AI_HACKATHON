@@ -9,6 +9,7 @@ import { CareerReadiness } from './features/career/CareerReadiness';
 import { CareerRoadmap } from './features/career/CareerRoadmap';
 import { PlacementDrive } from './features/placement/PlacementDrive';
 import { AlumniDirectory } from './features/alumni/AlumniDirectory';
+import { AlumniEvents } from './features/alumni/AlumniEvents';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 import { Institution } from './pages/Institution';
@@ -30,6 +31,7 @@ const navItems: NavItem[] = [
   { label: 'Broadcast', href: '/notifications/manage', icon: Bell, roles: ['COLLEGE_ADMIN', 'ADMIN'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
   { label: 'Alumni Network', href: '/alumni', icon: FileText, roles: ['STUDENT', 'TPO', 'ALUMNI', 'FACULTY'] },
+  { label: 'Alumni Events', href: '/alumni/events', icon: Bell, roles: ['STUDENT', 'ALUMNI', 'TPO', 'FACULTY'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
   { label: 'Safety SOS', href: '/safety', icon: ShieldAlert },
 ];
@@ -146,6 +148,7 @@ export const App = () => {
           <Route path="/assessments" element={<CareerAssessment />} />
           
           <Route path="/alumni" element={<AlumniDirectory />} />
+          <Route path="/alumni/events" element={<AlumniEvents />} />
 
           <Route path="/unauthorized" element={
             <div className="p-6 text-center">

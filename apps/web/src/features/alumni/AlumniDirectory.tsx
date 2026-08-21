@@ -15,6 +15,8 @@ export function AlumniDirectory() {
   const [myProfile, setMyProfile] = useState<AlumniProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [requestingId, setRequestingId] = useState<string | null>(null);
+  const [message, setMessage] = useState('');
   
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -100,6 +102,28 @@ export function AlumniDirectory() {
         alert('Profile updated successfully!');
       } else {
         alert('Failed to update profile');
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleRequestMentorship = async (alumniId: string) => {
+    try {
+      const res = await fetch('/api/v1/alumni/mentorship/request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ alumniId, message })
+      });
+      if (res.ok) {
+        alert('Mentorship requested successfully!');
+        setRequestingId(null);
+        setMessage('');
+      } else {
+        alert('Failed to request mentorship');
       }
     } catch (err) {
       console.error(err);
@@ -204,6 +228,29 @@ export function AlumniDirectory() {
                 </div>
               )}
             </div>
+            
+            {user?.roles?.includes('STUDENT') && (
+              <div className="mt-4 pt-4 border-t">
+                {requestingId === alumni.id ? (
+                  <div className="space-y-2">
+                    <textarea 
+                      className="w-full border rounded p-2 text-sm" 
+                      placeholder="Why do you want mentorship?"
+                      value={message}
+                      onChange={e => setMessage(e.target.value)}
+                    />
+                    <div className="flex space-x-2">
+                      <button onClick={() => handleRequestMentorship(alumni.id)} className="bg-blue-600 text-white text-xs px-3 py-1 rounded">Send Request</button>
+                      <button onClick={() => setRequestingId(null)} className="text-gray-500 text-xs px-3 py-1">Cancel</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button onClick={() => setRequestingId(alumni.id)} className="text-blue-600 text-sm font-semibold hover:underline">
+                    Request Mentorship
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         ))}
       </div>

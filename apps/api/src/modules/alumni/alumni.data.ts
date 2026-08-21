@@ -11,6 +11,30 @@ export interface AlumniProfileData {
   expertise: string[];
 }
 
+export interface MentorshipRequest {
+  id: string;
+  studentId: string;
+  alumniId: string;
+  message: string;
+  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
+}
+
+export interface MentorshipSession {
+  id: string;
+  requestId: string;
+  scheduledAt: string;
+  meetingLink: string;
+}
+
+export interface AlumniEvent {
+  id: string;
+  creatorId: string;
+  title: string;
+  description: string;
+  date: string;
+  location: string;
+}
+
 class AlumniDataStore {
   private profiles: AlumniProfileData[] = [
     {
@@ -60,6 +84,60 @@ class AlumniDataStore {
       Object.assign(profile, data);
     }
     return profile;
+  }
+
+  // --- Mentorship Data Methods ---
+  private mentorshipRequests: MentorshipRequest[] = [];
+  private mentorshipSessions: MentorshipSession[] = [];
+
+  createMentorshipRequest(studentId: string, alumniId: string, message: string): MentorshipRequest {
+    const req: MentorshipRequest = {
+      id: randomUUID(),
+      studentId,
+      alumniId,
+      message,
+      status: 'PENDING'
+    };
+    this.mentorshipRequests.push(req);
+    return req;
+  }
+
+  updateMentorshipRequestStatus(requestId: string, status: 'ACCEPTED' | 'REJECTED'): MentorshipRequest | null {
+    const req = this.mentorshipRequests.find(r => r.id === requestId);
+    if (!req) return null;
+    req.status = status;
+    return req;
+  }
+
+  createMentorshipSession(requestId: string, scheduledAt: string, meetingLink: string): MentorshipSession {
+    const session: MentorshipSession = {
+      id: randomUUID(),
+      requestId,
+      scheduledAt,
+      meetingLink
+    };
+    this.mentorshipSessions.push(session);
+    return session;
+  }
+
+  // --- Events Data Methods ---
+  private events: AlumniEvent[] = [];
+
+  createEvent(creatorId: string, title: string, description: string, date: string, location: string): AlumniEvent {
+    const event: AlumniEvent = {
+      id: randomUUID(),
+      creatorId,
+      title,
+      description,
+      date,
+      location
+    };
+    this.events.push(event);
+    return event;
+  }
+
+  getEvents(): AlumniEvent[] {
+    return this.events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }
 }
 
