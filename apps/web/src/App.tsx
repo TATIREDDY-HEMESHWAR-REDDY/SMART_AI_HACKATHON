@@ -5,6 +5,7 @@ import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, Ba
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 import { Institution } from './pages/Institution';
+import { Profile } from './pages/Profile';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
@@ -92,6 +93,8 @@ export const App = () => {
               <Institution />
             </RoleGuard>
           } />
+
+          <Route path="/profile" element={<Profile />} />
 
           <Route path="/attendance" element={<Attendance />} />
           
