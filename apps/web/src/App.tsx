@@ -101,7 +101,11 @@ export const App = () => {
 
           <Route path="/profile" element={<Profile />} />
 
-          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/attendance" element={
+            <RoleGuard allowedRoles={['STUDENT', 'FACULTY', 'PARENT']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Attendance />
+            </RoleGuard>
+          } />
           
           <Route path="/academics" element={
             <RoleGuard allowedRoles={['STUDENT', 'FACULTY']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
@@ -122,12 +126,19 @@ export const App = () => {
           } />
           
           <Route path="/placement" element={
-            <RoleGuard allowedRoles={['STUDENT', 'TPO', 'RECRUITER']} userRoles={['STUDENT']}>
+            <RoleGuard allowedRoles={['STUDENT', 'TPO', 'RECRUITER']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
               <div className="p-6">
                 <h2 className="text-2xl font-bold mb-4">Placement Portal</h2>
                 <p>Welcome to the placement drive portal.</p>
               </div>
             </RoleGuard>
+          } />
+
+          <Route path="/unauthorized" element={
+            <div className="p-6 text-center">
+              <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
+              <p className="text-gray-500">You do not have permission to view this page.</p>
+            </div>
           } />
 
           <Route path="*" element={<div className="p-6 text-gray-500">Feature coming soon...</div>} />

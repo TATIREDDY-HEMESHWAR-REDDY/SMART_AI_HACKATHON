@@ -68,7 +68,7 @@ export const Attendance = () => {
     setSaving(true);
     try {
       const records = roster.map(r => ({ studentId: r.studentId, status: r.status }));
-      await fetch(`http://localhost:3000/api/v1/attendance/sessions/${selectedSession.id}/mark`, {
+      const res = await fetch(`http://localhost:3000/api/v1/attendance/sessions/${selectedSession.id}/mark`, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -76,10 +76,15 @@ export const Attendance = () => {
         },
         body: JSON.stringify({ records })
       });
-      alert('Attendance saved successfully!');
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert('Attendance saved successfully!');
+      } else {
+        alert(`Failed to save: ${data.message || 'Server error'}`);
+      }
     } catch (err) {
       console.error(err);
-      alert('Failed to save attendance');
+      alert('Failed to save attendance. Please check your connection.');
     } finally {
       setSaving(false);
     }

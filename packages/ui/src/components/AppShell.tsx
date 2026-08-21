@@ -18,7 +18,7 @@ export const AppShell: React.FC<AppShellProps> = ({ navItems, userRoles, userNam
       <div className="flex-1 flex flex-col min-w-0">
         <Topbar userName={userName} userRole={userRoles?.[0]} onLogout={onLogout} />
         
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto">
           {/* React Router will render the matched child route here */}
           <Outlet />
         </main>

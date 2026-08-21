@@ -49,10 +49,10 @@ export const Profile = () => {
       const payload = {
         phone: editForm.phone,
         careerGoal: editForm.careerGoal,
-        skills: editForm.skills.split(',').map((s: string) => s.trim()).filter(Boolean),
-        certifications: editForm.certifications.split(',').map((s: string) => s.trim()).filter(Boolean),
-        projects: editForm.projects.split(',').map((s: string) => s.trim()).filter(Boolean),
-        internships: editForm.internships.split(',').map((s: string) => s.trim()).filter(Boolean),
+        skills: (editForm.skills || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+        certifications: (editForm.certifications || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+        projects: (editForm.projects || '').split(',').map((s: string) => s.trim()).filter(Boolean),
+        internships: (editForm.internships || '').split(',').map((s: string) => s.trim()).filter(Boolean),
       };
 
       const res = await fetch('http://localhost:3000/api/v1/students/me', {
@@ -67,9 +67,13 @@ export const Profile = () => {
       if (res.ok) {
         await fetchProfile();
         setIsEditing(false);
+      } else {
+        const errData = await res.json().catch(() => null);
+        alert(`Failed to save: ${errData?.message || 'Unknown error'}`);
       }
     } catch (err) {
       console.error('Failed to update', err);
+      alert('Failed to save profile. Please try again.');
     } finally {
       setSaving(false);
     }
@@ -154,7 +158,7 @@ export const Profile = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-xs text-gray-500 uppercase">CGPA</p>
-                    <p className="font-bold text-blue-600">{userProfile.cgpa.toFixed(2)}</p>
+                    <p className="font-bold text-blue-600">{userProfile.cgpa?.toFixed(2) ?? 'N/A'}</p>
                   </div>
                 </div>
               </div>
