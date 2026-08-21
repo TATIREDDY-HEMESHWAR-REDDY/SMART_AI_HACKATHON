@@ -14,14 +14,16 @@ export default async function attendanceRoutes(server: FastifyInstance) {
     let courses;
     if (user.roles.includes('FACULTY')) {
       const profile = await prisma.facultyProfile.findUnique({ where: { userId: user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Faculty profile not found' });
       courses = await prisma.course.findMany({
-        where: { facultyId: profile?.id },
+        where: { facultyId: profile.id },
         include: { sessions: { orderBy: { date: 'desc' } } }
       });
     } else {
       const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Student profile not found' });
       const enrollments = await prisma.courseEnrollment.findMany({
-        where: { studentId: profile?.id },
+        where: { studentId: profile.id },
         include: { course: { include: { sessions: { orderBy: { date: 'desc' } } } } }
       });
       courses = enrollments.map(e => e.course);
@@ -66,7 +68,70 @@ export default async function attendanceRoutes(server: FastifyInstance) {
     return { success: true, data: { session, roster } };
   });
 
-  // Save attendance for a session
+  // Get overall course stats
+  server.get('/course/:courseId', { preValidation: [server.requireAuth] }, async (request, reply) => {
+    const { courseId } = request.params as { courseId: string };
+    
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      include: {
+        sessions: { include: { records: true } },
+        enrollments: true
+      }
+    });
+
+    if (!course) return reply.status(404).send({ success: false, message: 'Course not found' });
+
+    return { success: true, data: course };
+  });
+
+  // Get student attendance stats
+  server.get('/student/:id', { preValidation: [server.requireAuth] }, async (request, reply) => {
+    const { id } = request.params as { id: string };
+
+    // Security: Student can only view their own stats
+    if (request.user.roles.includes('STUDENT') && request.user.id !== id) {
+      return reply.status(403).send({ success: false, message: 'Forbidden' });
+    }
+
+    const studentProfile = await prisma.studentProfile.findUnique({ where: { userId: id } });
+    if (!studentProfile) return reply.status(404).send({ success: false, message: 'Profile not found' });
+
+    // Calculate stats per course
+    const enrollments = await prisma.courseEnrollment.findMany({
+      where: { studentId: studentProfile.id },
+      include: {
+        course: {
+          include: { sessions: true }
+        }
+      }
+    });
+
+    const records = await prisma.attendanceRecord.findMany({
+      where: { studentId: studentProfile.id },
+      include: { session: true }
+    });
+
+    const stats = enrollments.map(enrollment => {
+      const courseSessions = enrollment.course.sessions.length;
+      const presentRecords = records.filter(r => r.session.courseId === enrollment.courseId && r.status === 'PRESENT').length;
+      const percentage = courseSessions === 0 ? 100 : (presentRecords / courseSessions) * 100;
+      
+      return {
+        courseId: enrollment.courseId,
+        courseName: enrollment.course.name,
+        courseCode: enrollment.course.code,
+        totalSessions: courseSessions,
+        presentCount: presentRecords,
+        percentage: percentage,
+        lowAttendanceAlert: percentage < 75
+      };
+    });
+
+    return { success: true, data: stats };
+  });
+
+  // Save attendance for a session (Faculty)
   server.post('/sessions/:sessionId/mark', { preValidation: [server.requireRole(['FACULTY'])] }, async (request, reply) => {
     const { sessionId } = request.params as { sessionId: string };
     const parsed = markAttendanceSchema.safeParse(request.body);
@@ -76,6 +141,15 @@ export default async function attendanceRoutes(server: FastifyInstance) {
         success: false,
         error: { code: 'VALIDATION_ERROR', message: 'Invalid attendance data' }
       });
+    }
+
+    // EDGE CASE FIX: Verify Faculty owns this session's course
+    const profile = await prisma.facultyProfile.findUnique({ where: { userId: request.user.id } });
+    const session = await prisma.classSession.findUnique({ where: { id: sessionId }, include: { course: true } });
+    
+    if (!session) return reply.status(404).send({ success: false, message: 'Session not found' });
+    if (session.course.facultyId !== profile?.id) {
+      return reply.status(403).send({ success: false, message: 'Not authorized. You do not teach this course.' });
     }
 
     // Use Prisma transaction to upsert all records
@@ -102,7 +176,36 @@ export default async function attendanceRoutes(server: FastifyInstance) {
 
     const savedRecords = await prisma.$transaction(transaction);
 
-    return { success: true, data: savedRecords };
+    return { success: true, data: savedRecords, message: 'Attendance marked successfully' };
   });
 
+  // Biometric Mock (Student self-marking for a session, mocking geofence/QR)
+  server.post('/sessions/:sessionId/biometric-mock', { preValidation: [server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const { sessionId } = request.params as { sessionId: string };
+    const profile = await prisma.studentProfile.findUnique({ where: { userId: request.user.id } });
+    if (!profile) return reply.status(404).send({ success: false, message: 'Profile not found' });
+
+    // EDGE CASE FIX: Ensure student is actually enrolled in this course!
+    const session = await prisma.classSession.findUnique({ where: { id: sessionId }, include: { course: { include: { enrollments: true } } } });
+    if (!session) return reply.status(404).send({ success: false, message: 'Session not found' });
+
+    const isEnrolled = session.course.enrollments.some(e => e.studentId === profile.id);
+    if (!isEnrolled) return reply.status(403).send({ success: false, message: 'Cannot mark attendance for a course you are not enrolled in.' });
+
+    // EDGE CASE FIX: Ensure students can only mark attendance on the actual day of the session
+    const sessionDate = new Date(session.date).toDateString();
+    const today = new Date().toDateString();
+    if (sessionDate !== today) {
+      return reply.status(400).send({ success: false, message: 'Biometric verification is only allowed on the exact day of the session.' });
+    }
+
+    // Mark present
+    const record = await prisma.attendanceRecord.upsert({
+      where: { sessionId_studentId: { sessionId, studentId: profile.id } },
+      update: { status: 'PRESENT', remarks: 'Biometric Verified' },
+      create: { sessionId, studentId: profile.id, status: 'PRESENT', remarks: 'Biometric Verified' }
+    });
+
+    return { success: true, data: record, message: 'Biometric attendance marked successfully!' };
+  });
 }

@@ -8,6 +8,13 @@ import authRoutes from './modules/auth/auth.routes';
 import careerRoutes from './modules/career/career.routes';
 import attendanceRoutes from './modules/attendance/attendance.routes';
 import placementRoutes from './modules/placement/placement.routes';
+import institutionRoutes from './modules/institution/institution.routes';
+import usersRoutes from './modules/users/users.routes';
+import departmentRoutes from './modules/departments/departments.routes';
+import studentRoutes from './modules/students/students.routes';
+import academicsRoutes from './modules/academics/academics.routes';
+import complaintsRoutes from './modules/complaints/complaints.routes';
+import notificationsRoutes from './modules/notifications/notifications.routes';
 
 dotenv.config({ path: '../../.env' });
 
@@ -40,6 +47,13 @@ server.register(authRoutes, { prefix: '/api/v1/auth' });
 server.register(careerRoutes, { prefix: '/api/v1/career' });
 server.register(attendanceRoutes, { prefix: '/api/v1/attendance' });
 server.register(placementRoutes, { prefix: '/api/v1/placement' });
+server.register(institutionRoutes, { prefix: '/api/v1/institutions' });
+server.register(usersRoutes, { prefix: '/api/v1/users' });
+server.register(departmentRoutes, { prefix: '/api/v1/departments' });
+server.register(studentRoutes, { prefix: '/api/v1/students' });
+server.register(academicsRoutes, { prefix: '/api/v1/academics' });
+server.register(complaintsRoutes, { prefix: '/api/v1/complaints' });
+server.register(notificationsRoutes, { prefix: '/api/v1/notifications' });
 
 const start = async () => {
   try {

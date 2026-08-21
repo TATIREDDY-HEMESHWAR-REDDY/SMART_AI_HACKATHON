@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
-import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus, Brain, Target } from 'lucide-react';
+import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus, Brain, Target, Building2, Bell } from 'lucide-react';
 import { CareerProfile } from './features/career/CareerProfile';
 import { SkillCatalog } from './features/career/SkillCatalog';
 import { CareerAssessment } from './features/career/CareerAssessment';
@@ -10,15 +10,23 @@ import { CareerRoadmap } from './features/career/CareerRoadmap';
 import { PlacementDrive } from './features/placement/PlacementDrive';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
+import { Institution } from './pages/Institution';
+import { Profile } from './pages/Profile';
+import { Academics } from './pages/Academics';
+import { Helpdesk } from './pages/Helpdesk';
+import { NotificationsManage } from './pages/NotificationsManage';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
+  { label: 'Institution', href: '/institution', icon: Building2, roles: ['COLLEGE_ADMIN', 'SUPER_ADMIN', 'FACULTY'] },
   { label: 'Attendance', href: '/attendance', icon: Calendar, roles: ['STUDENT', 'FACULTY', 'PARENT'] },
   { label: 'Academics', href: '/academics', icon: GraduationCap, roles: ['STUDENT', 'FACULTY'] },
   { label: 'Career Profile', href: '/career', icon: Compass, roles: ['STUDENT'] },
   { label: 'Skill Catalog', href: '/skills', icon: ListPlus, roles: ['STUDENT'] },
   { label: 'Readiness & Gaps', href: '/readiness', icon: Target, roles: ['STUDENT'] },
   { label: 'Assessments', href: '/assessments', icon: Brain, roles: ['STUDENT'] },
+  { label: 'Helpdesk', href: '/helpdesk', icon: FileText },
+  { label: 'Broadcast', href: '/notifications/manage', icon: Bell, roles: ['COLLEGE_ADMIN', 'ADMIN'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
   { label: 'Safety SOS', href: '/safety', icon: ShieldAlert },
@@ -95,7 +103,37 @@ export const App = () => {
             </div>
           } />
           
-          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/institution" element={
+            <RoleGuard allowedRoles={['COLLEGE_ADMIN', 'SUPER_ADMIN', 'FACULTY']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Institution />
+            </RoleGuard>
+          } />
+
+          <Route path="/profile" element={<Profile />} />
+
+          <Route path="/attendance" element={
+            <RoleGuard allowedRoles={['STUDENT', 'FACULTY', 'PARENT']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Attendance />
+            </RoleGuard>
+          } />
+          
+          <Route path="/academics" element={
+            <RoleGuard allowedRoles={['STUDENT', 'FACULTY']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Academics />
+            </RoleGuard>
+          } />
+
+          <Route path="/helpdesk" element={
+            <RoleGuard allowedRoles={['STUDENT', 'FACULTY', 'COLLEGE_ADMIN', 'ADMIN', 'MAINTENANCE']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Helpdesk />
+            </RoleGuard>
+          } />
+
+          <Route path="/notifications/manage" element={
+            <RoleGuard allowedRoles={['COLLEGE_ADMIN', 'ADMIN']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <NotificationsManage />
+            </RoleGuard>
+          } />
           
           <Route path="/placement" element={<PlacementDrive />} />
 
@@ -104,6 +142,13 @@ export const App = () => {
           <Route path="/readiness" element={<CareerReadiness />} />
           <Route path="/roadmap" element={<CareerRoadmap />} />
           <Route path="/assessments" element={<CareerAssessment />} />
+
+          <Route path="/unauthorized" element={
+            <div className="p-6 text-center">
+              <h2 className="text-2xl font-bold text-red-600 mb-2">Access Denied</h2>
+              <p className="text-gray-500">You do not have permission to view this page.</p>
+            </div>
+          } />
           <Route path="*" element={<div className="p-6 text-gray-500">Feature coming soon...</div>} />
         </Route>
       </Routes>
