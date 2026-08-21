@@ -5,7 +5,7 @@ import { GraduationCap, Loader2 } from 'lucide-react';
 export const Login = () => {
   const navigate = useNavigate();
   // Pre-filled with our seed data for easy testing!
-  const [email, setEmail] = useState('student@campus.os');
+  const [email, setEmail] = useState('student@hvk.edu');
   const [password, setPassword] = useState('password123');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,7 @@ export const Login = () => {
 
       // Save to localStorage so the App can use it
       localStorage.setItem('token', data.data.token);
+      localStorage.setItem('refreshToken', data.data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.data.user));
       
       // Redirect to the protected dashboard
@@ -70,7 +71,7 @@ export const Login = () => {
                 type="email"
                 required
                 className="appearance-none rounded-md relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                placeholder="student@campus.os"
+                placeholder="student@hvk.edu"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />

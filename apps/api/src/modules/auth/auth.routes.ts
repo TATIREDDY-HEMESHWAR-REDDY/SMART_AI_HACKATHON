@@ -54,13 +54,24 @@ export default async function authRoutes(server: FastifyInstance) {
     // Map roles
     const roles = user.roles.map((r: any) => r.role.name);
 
-    // Sign Token
-    const token = server.jwt.sign({ id: user.id, roles });
+    // Sign Access Token (1 hour) and Refresh Token (7 days)
+    const token = server.jwt.sign({ id: user.id, roles }, { expiresIn: '1h' });
+    const refreshToken = server.jwt.sign({ id: user.id, type: 'refresh' }, { expiresIn: '7d' });
 
-    const response: ApiSuccessResponse = {
+    // Store Refresh Token in DB
+    await prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
+      }
+    });
+
+    const response = {
       success: true,
       data: {
         token,
+        refreshToken,
         user: {
           id: user.id,
           email: user.email,
@@ -72,6 +83,63 @@ export default async function authRoutes(server: FastifyInstance) {
     };
 
     return response;
+  });
+
+  server.post('/logout', { preValidation: [server.requireAuth] }, async (request, reply) => {
+    const { refreshToken } = request.body as { refreshToken?: string } || {};
+    
+    // Invalidate refresh token if provided
+    if (refreshToken) {
+      await prisma.refreshToken.deleteMany({
+        where: { token: refreshToken, userId: request.user.id }
+      });
+    }
+
+    return { success: true, message: 'Logged out successfully' };
+  });
+
+  server.post('/refresh', async (request, reply) => {
+    const { refreshToken } = request.body as { refreshToken?: string } || {};
+    
+    if (!refreshToken) {
+      reply.status(400).send({ success: false, error: { code: 'BAD_REQUEST', message: 'Refresh token required' } });
+      return;
+    }
+
+    try {
+      // Verify signature
+      const decoded = server.jwt.verify(refreshToken) as any;
+      if (decoded.type !== 'refresh') throw new Error('Invalid token type');
+
+      // Verify exists in DB and is not expired
+      const dbToken = await prisma.refreshToken.findUnique({ where: { token: refreshToken } });
+      if (!dbToken) {
+        throw new Error('Refresh token revoked or invalid');
+      }
+
+      if (dbToken.expiresAt < new Date()) {
+        await prisma.refreshToken.delete({ where: { id: dbToken.id } });
+        throw new Error('Refresh token expired');
+      }
+
+      // Get user and generate new access token
+      const user = await prisma.user.findUnique({
+        where: { id: decoded.id },
+        include: { roles: { include: { role: true } } }
+      });
+
+      if (!user) throw new Error('User not found');
+
+      const roles = user.roles.map((r: any) => r.role.name);
+      const token = server.jwt.sign({ id: user.id, roles }, { expiresIn: '1h' });
+
+      return { success: true, data: { token } };
+    } catch (err: any) {
+      reply.status(401).send({
+        success: false,
+        error: { code: 'UNAUTHORIZED', message: err.message || 'Invalid refresh token' }
+      });
+    }
   });
 
   server.get('/me', { preValidation: [server.requireAuth] }, async (request, reply) => {
