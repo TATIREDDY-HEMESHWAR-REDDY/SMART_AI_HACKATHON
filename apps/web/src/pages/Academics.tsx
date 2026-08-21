@@ -204,11 +204,11 @@ export const Academics = () => {
                                     <div className="flex items-center gap-2">
                                       <input 
                                         type="number" 
-                                        defaultValue={result?.marksObtained || ''}
+                                        defaultValue={result?.marksObtained ?? ''}
                                         placeholder="Marks"
                                         className="w-20 px-2 py-1 border border-gray-300 rounded text-sm text-right"
                                         onBlur={(e) => {
-                                          if(e.target.value) {
+                                          if(e.target.value !== '') {
                                             handleGradeSubmit(exam.id, enrollment.studentId, Number(e.target.value), exam.maxMarks);
                                           }
                                         }}

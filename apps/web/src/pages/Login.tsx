@@ -102,18 +102,27 @@ export const Login = () => {
 
         <div className="mt-6 border-t border-gray-100 pt-6">
           <p className="text-center text-xs text-gray-500 mb-3">Quick Login (Demo)</p>
-          <div className="flex gap-2 justify-center">
+          <div className="flex gap-2 justify-center flex-wrap">
             <button 
+              type="button"
               onClick={() => { setEmail('student@hvk.edu'); setPassword('password123'); }}
               className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
             >
               Student
             </button>
             <button 
+              type="button"
               onClick={() => { setEmail('faculty@hvk.edu'); setPassword('password123'); }}
               className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
             >
               Faculty
+            </button>
+            <button 
+              type="button"
+              onClick={() => { setEmail('admin@hvk.edu'); setPassword('password123'); }}
+              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
+            >
+              Admin
             </button>
           </div>
         </div>

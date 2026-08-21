@@ -78,8 +78,8 @@ export default async function academicsRoutes(server: FastifyInstance) {
         where: { facultyId: profile.id },
         include: { 
           assignments: true, 
-          exams: { include: { results: { include: { student: { include: { user: true } } } } } },
-          enrollments: { include: { student: { include: { user: true } } } }
+          exams: { include: { results: { include: { student: { include: { user: { select: { id: true, email: true } } } } } } } },
+          enrollments: { include: { student: { include: { user: { select: { id: true, email: true } } } } } }
         }
       });
       return { success: true, data: courses };

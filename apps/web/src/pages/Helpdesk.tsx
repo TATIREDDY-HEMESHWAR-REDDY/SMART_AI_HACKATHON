@@ -146,7 +146,7 @@ export const Helpdesk = () => {
         )}
 
         {/* Right Column / Main Area: Tickets List */}
-        <div className={`lg:col-span-${role === 'USER' ? '2' : '3'} space-y-4`}>
+        <div className={`${role === 'USER' ? 'lg:col-span-2' : 'lg:col-span-3'} space-y-4`}>
           <h2 className="text-lg font-bold text-gray-900 flex items-center gap-2">
             <Building size={18} className="text-gray-500"/> {role === 'ADMIN' ? 'All Active Tickets' : 'My Tickets'}
           </h2>

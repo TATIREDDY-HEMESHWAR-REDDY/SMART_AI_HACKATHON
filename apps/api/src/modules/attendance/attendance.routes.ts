@@ -14,14 +14,16 @@ export default async function attendanceRoutes(server: FastifyInstance) {
     let courses;
     if (user.roles.includes('FACULTY')) {
       const profile = await prisma.facultyProfile.findUnique({ where: { userId: user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Faculty profile not found' });
       courses = await prisma.course.findMany({
-        where: { facultyId: profile?.id },
+        where: { facultyId: profile.id },
         include: { sessions: { orderBy: { date: 'desc' } } }
       });
     } else {
       const profile = await prisma.studentProfile.findUnique({ where: { userId: user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Student profile not found' });
       const enrollments = await prisma.courseEnrollment.findMany({
-        where: { studentId: profile?.id },
+        where: { studentId: profile.id },
         include: { course: { include: { sessions: { orderBy: { date: 'desc' } } } } }
       });
       courses = enrollments.map(e => e.course);
