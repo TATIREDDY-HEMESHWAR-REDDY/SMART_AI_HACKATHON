@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
-import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck } from 'lucide-react';
+import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Building2 } from 'lucide-react';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
+import { Institution } from './pages/Institution';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
+  { label: 'Institution', href: '/institution', icon: Building2, roles: ['COLLEGE_ADMIN', 'SUPER_ADMIN', 'FACULTY'] },
   { label: 'Attendance', href: '/attendance', icon: Calendar, roles: ['STUDENT', 'FACULTY', 'PARENT'] },
   { label: 'Academics', href: '/academics', icon: GraduationCap, roles: ['STUDENT', 'FACULTY'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
@@ -85,6 +87,12 @@ export const App = () => {
             </div>
           } />
           
+          <Route path="/institution" element={
+            <RoleGuard allowedRoles={['COLLEGE_ADMIN', 'SUPER_ADMIN', 'FACULTY']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Institution />
+            </RoleGuard>
+          } />
+
           <Route path="/attendance" element={<Attendance />} />
           
           <Route path="/placement" element={
