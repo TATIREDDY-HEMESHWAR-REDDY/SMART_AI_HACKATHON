@@ -52,7 +52,7 @@ export default async function authRoutes(server: FastifyInstance) {
     }
 
     // Map roles
-    const roles = user.roles.map(r => r.role.name);
+    const roles = user.roles.map((r: any) => r.role.name);
 
     // Sign Token
     const token = server.jwt.sign({ id: user.id, roles });
@@ -96,7 +96,7 @@ export default async function authRoutes(server: FastifyInstance) {
       return;
     }
 
-    const roles = user.roles.map(r => r.role.name);
+    const roles = user.roles.map((r: any) => r.role.name);
 
     const response: ApiSuccessResponse = {
       success: true,
