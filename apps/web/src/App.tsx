@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
 import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck } from 'lucide-react';
 import { Login } from './pages/Login';
+import { Attendance } from './pages/Attendance';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
@@ -69,6 +70,8 @@ export const App = () => {
               </div>
             </div>
           } />
+          
+          <Route path="/attendance" element={<Attendance />} />
           
           <Route path="/placement" element={
             <RoleGuard allowedRoles={['STUDENT', 'TPO', 'RECRUITER']} userRoles={['STUDENT']}>
