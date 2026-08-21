@@ -245,4 +245,13 @@ export default async function careerRoutes(server: FastifyInstance) {
     return response;
   });
 
+  // GET /api/v1/career/analytics/dashboard
+  // Roles: TPO, FACULTY
+  server.get('/analytics/dashboard', {
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['TPO', 'FACULTY'])]
+  }, async (request, reply) => {
+    const data = await careerDataLayer.getAnalyticsDashboard();
+    return reply.send({ success: true, data });
+  });
+
 }

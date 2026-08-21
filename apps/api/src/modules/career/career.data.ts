@@ -185,5 +185,50 @@ export const careerDataLayer = {
       },
       lastUpdated: new Date().toISOString()
     };
+  },
+
+  // ==========================================
+  // ANALYTICS
+  // ==========================================
+  
+  getAnalyticsDashboard: async () => {
+    // Top Goals
+    const roleCounts: Record<string, number> = {};
+    for (const goal of mockCareerGoals) {
+      if (goal.isActive) {
+        roleCounts[goal.targetRole] = (roleCounts[goal.targetRole] || 0) + 1;
+      }
+    }
+    const topGoals = Object.entries(roleCounts)
+      .map(([role, count]) => ({ role, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Popular Skills
+    const skillCounts: Record<string, number> = {};
+    for (const ss of mockStudentSkills) {
+      const skillName = mockSkills.find(s => s.id === ss.skillId)?.name || 'Unknown';
+      skillCounts[skillName] = (skillCounts[skillName] || 0) + 1;
+    }
+    const popularSkills = Object.entries(skillCounts)
+      .map(([skill, count]) => ({ skill, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 5);
+
+    // Aggregate Readiness (Basic Engagement Metrics)
+    const uniqueStudentsWithGoals = new Set(mockCareerGoals.map(g => g.studentId)).size;
+    const uniqueStudentsWithSkills = new Set(mockStudentSkills.map(s => s.studentId)).size;
+    const totalAssessmentsTaken = mockAssessmentResults.length;
+
+    return {
+      topGoals,
+      popularSkills,
+      aggregateReadiness: {
+        uniqueStudentsWithGoals,
+        uniqueStudentsWithSkills,
+        totalAssessmentsTaken
+      },
+      lastUpdated: new Date().toISOString()
+    };
   }
 };

@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
-import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus, Brain, Target, Building2, Bell } from 'lucide-react';
+import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus, Brain, Target, Building2, Bell, LineChart } from 'lucide-react';
 import { CareerProfile } from './features/career/CareerProfile';
 import { SkillCatalog } from './features/career/SkillCatalog';
 import { CareerAssessment } from './features/career/CareerAssessment';
 import { CareerReadiness } from './features/career/CareerReadiness';
 import { CareerRoadmap } from './features/career/CareerRoadmap';
+import { CareerAnalytics } from './features/career/CareerAnalytics';
 import { PlacementDrive } from './features/placement/PlacementDrive';
 import { AlumniDirectory } from './features/alumni/AlumniDirectory';
 import { AlumniEvents } from './features/alumni/AlumniEvents';
@@ -27,6 +28,7 @@ const navItems: NavItem[] = [
   { label: 'Skill Catalog', href: '/skills', icon: ListPlus, roles: ['STUDENT'] },
   { label: 'Readiness & Gaps', href: '/readiness', icon: Target, roles: ['STUDENT'] },
   { label: 'Assessments', href: '/assessments', icon: Brain, roles: ['STUDENT'] },
+  { label: 'Career Analytics', href: '/career/analytics', icon: LineChart, roles: ['TPO', 'FACULTY'] },
   { label: 'Helpdesk', href: '/helpdesk', icon: FileText },
   { label: 'Broadcast', href: '/notifications/manage', icon: Bell, roles: ['COLLEGE_ADMIN', 'ADMIN'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
@@ -146,6 +148,7 @@ export const App = () => {
           <Route path="/readiness" element={<CareerReadiness />} />
           <Route path="/roadmap" element={<CareerRoadmap />} />
           <Route path="/assessments" element={<CareerAssessment />} />
+          <Route path="/career/analytics" element={<CareerAnalytics />} />
           
           <Route path="/alumni" element={<AlumniDirectory />} />
           <Route path="/alumni/events" element={<AlumniEvents />} />
