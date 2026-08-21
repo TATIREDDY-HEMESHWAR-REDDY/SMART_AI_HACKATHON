@@ -154,10 +154,34 @@ async function main() {
     }
   });
 
+  // 7. Demo Admin User (for Complaints & Notifications)
+  const adminUser = await prisma.user.upsert({
+    where: { email: 'admin@hvk.edu' },
+    update: {},
+    create: {
+      email: 'admin@hvk.edu',
+      passwordHash,
+      institutionId: institution.id,
+      roles: { create: { roleId: adminRole.id } }
+    }
+  });
+
+  // 8. Seed Dummy Complaint
+  await prisma.complaint.create({
+    data: {
+      title: 'AC Not Working in Room 304',
+      description: 'The air conditioner is making a loud noise and not cooling the room during the 10:00 AM class.',
+      location: 'Room 304',
+      status: 'OPEN',
+      authorId: facultyUser.id
+    }
+  });
+
   console.log('✅ Seeding complete!');
   console.log('Login credentials:');
   console.log('  STUDENT: student@hvk.edu / password123');
   console.log('  FACULTY: faculty@hvk.edu / password123');
+  console.log('  ADMIN: admin@hvk.edu / password123');
 }
 
 main()
