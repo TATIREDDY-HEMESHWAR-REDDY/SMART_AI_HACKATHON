@@ -6,6 +6,10 @@ import { ApiErrorResponse } from '@campus-os/types';
 import { authPlugin } from './plugins/auth';
 import authRoutes from './modules/auth/auth.routes';
 import attendanceRoutes from './modules/attendance/attendance.routes';
+import institutionRoutes from './modules/institution/institution.routes';
+import usersRoutes from './modules/users/users.routes';
+import departmentRoutes from './modules/departments/departments.routes';
+import studentRoutes from './modules/students/students.routes';
 
 dotenv.config({ path: '../../.env' });
 
@@ -36,6 +40,10 @@ server.get('/api/v1/health', async () => {
 // Register Modules
 server.register(authRoutes, { prefix: '/api/v1/auth' });
 server.register(attendanceRoutes, { prefix: '/api/v1/attendance' });
+server.register(institutionRoutes, { prefix: '/api/v1/institutions' });
+server.register(usersRoutes, { prefix: '/api/v1/users' });
+server.register(departmentRoutes, { prefix: '/api/v1/departments' });
+server.register(studentRoutes, { prefix: '/api/v1/students' });
 
 const start = async () => {
   try {
