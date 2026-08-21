@@ -6,6 +6,7 @@ import { CareerProfile } from './features/career/CareerProfile';
 import { SkillCatalog } from './features/career/SkillCatalog';
 import { CareerAssessment } from './features/career/CareerAssessment';
 import { CareerReadiness } from './features/career/CareerReadiness';
+import { CareerRoadmap } from './features/career/CareerRoadmap';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 
@@ -107,6 +108,7 @@ export const App = () => {
           <Route path="/career" element={<CareerProfile />} />
           <Route path="/skills" element={<SkillCatalog />} />
           <Route path="/readiness" element={<CareerReadiness />} />
+          <Route path="/roadmap" element={<CareerRoadmap />} />
           <Route path="/assessments" element={<CareerAssessment />} />
           <Route path="*" element={<div className="p-6 text-gray-500">Feature coming soon...</div>} />
         </Route>

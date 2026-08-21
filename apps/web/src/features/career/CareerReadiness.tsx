@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { RoleGuard } from '@campus-os/ui';
 import { Target, AlertCircle, Loader2, Info } from 'lucide-react';
 
@@ -107,13 +108,12 @@ export const CareerReadiness = () => {
               This feature relies on the AI Career Roadmap engine to analyze your profile against industry requirements.
             </p>
             
-            <div className="flex items-start space-x-2 text-sm text-blue-700 bg-blue-50 p-4 rounded-lg border border-blue-200">
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
-              <div className="text-left">
-                <p className="font-semibold mb-1">Pending Integration</p>
-                <p className="text-blue-600 text-xs">Waiting for Team 3 AI Roadmap dependency (`POST /ai/career/roadmap`) to be completed.</p>
-              </div>
-            </div>
+            <Link 
+              to="/roadmap"
+              className="inline-flex items-center space-x-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 hover:text-indigo-800 px-6 py-3 rounded-lg font-medium transition-colors border border-indigo-100"
+            >
+              <span>View Career Roadmap</span>
+            </Link>
           </div>
         </div>
       </div>
