@@ -7,12 +7,14 @@ import { Attendance } from './pages/Attendance';
 import { Institution } from './pages/Institution';
 import { Profile } from './pages/Profile';
 import { Academics } from './pages/Academics';
+import { Helpdesk } from './pages/Helpdesk';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
   { label: 'Institution', href: '/institution', icon: Building2, roles: ['COLLEGE_ADMIN', 'SUPER_ADMIN', 'FACULTY'] },
   { label: 'Attendance', href: '/attendance', icon: Calendar, roles: ['STUDENT', 'FACULTY', 'PARENT'] },
   { label: 'Academics', href: '/academics', icon: GraduationCap, roles: ['STUDENT', 'FACULTY'] },
+  { label: 'Helpdesk', href: '/helpdesk', icon: FileText },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
   { label: 'Safety SOS', href: '/safety', icon: ShieldAlert },
@@ -102,6 +104,12 @@ export const App = () => {
           <Route path="/academics" element={
             <RoleGuard allowedRoles={['STUDENT', 'FACULTY']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
               <Academics />
+            </RoleGuard>
+          } />
+
+          <Route path="/helpdesk" element={
+            <RoleGuard allowedRoles={['STUDENT', 'FACULTY', 'COLLEGE_ADMIN', 'ADMIN', 'MAINTENANCE']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <Helpdesk />
             </RoleGuard>
           } />
           
