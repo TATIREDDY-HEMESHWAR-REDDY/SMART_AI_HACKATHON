@@ -64,12 +64,18 @@ async function main() {
       roles: { create: { roleId: studentRole.id } },
       studentProfile: {
         create: {
-          enrollmentNumber: '21BCE0001',
           firstName: 'Ananya',
           lastName: 'Sharma',
-          currentSemester: 5,
-          cgpa: 8.6,
-          programId: btechCse.id
+          enrollmentNumber: 'HVK2023CS001',
+          programId: btechCse.id,
+          currentSemester: 3,
+          cgpa: 8.7,
+          phone: '+91 98765 43210',
+          skills: ['React', 'Node.js', 'Python', 'Machine Learning'],
+          certifications: ['AWS Cloud Practitioner', 'Google Data Analytics'],
+          projects: ['Smart Campus OS MVP', 'AI Attendance Tracker'],
+          internships: ['Summer Analyst @ TechCorp'],
+          careerGoal: 'Software Engineer in AI/ML'
         }
       }
     },
