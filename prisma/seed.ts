@@ -4,45 +4,64 @@ import bcrypt from 'bcrypt';
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('Seeding database...');
-  
-  // Create Demo Institution
-  const institution = await prisma.institution.upsert({
-    where: { code: 'VIT-C' },
-    update: {},
-    create: {
-      name: 'VIT-Style Institute, Chennai Campus',
-      code: 'VIT-C',
-    },
-  });
-  console.log('Created Institution:', institution.name);
-
-  // Create Roles
-  const studentRole = await prisma.role.upsert({
-    where: { name: 'STUDENT' },
-    update: {},
-    create: { name: 'STUDENT', description: 'Student Access' }
-  });
-
-  const facultyRole = await prisma.role.upsert({
-    where: { name: 'FACULTY' },
-    update: {},
-    create: { name: 'FACULTY', description: 'Faculty Access' }
-  });
-
-  // Create Demo Student User
+  console.log('Seeding database for Stage 1...');
   const passwordHash = await bcrypt.hash('password123', 10);
   
-  const studentUser = await prisma.user.upsert({
-    where: { email: 'student@campus.os' },
+  // 1. Institution
+  const institution = await prisma.institution.upsert({
+    where: { code: 'HVK-MAIN' },
+    update: {},
+    create: { name: 'Hayagriva Vidya Kendram', code: 'HVK-MAIN' },
+  });
+
+  // 2. Roles
+  const studentRole = await prisma.role.upsert({ where: { name: 'STUDENT' }, update: {}, create: { name: 'STUDENT' } });
+  const facultyRole = await prisma.role.upsert({ where: { name: 'FACULTY' }, update: {}, create: { name: 'FACULTY' } });
+  const adminRole = await prisma.role.upsert({ where: { name: 'COLLEGE_ADMIN' }, update: {}, create: { name: 'COLLEGE_ADMIN' } });
+
+  // 3. Department & Program
+  const cseDept = await prisma.department.create({
+    data: {
+      name: 'Computer Science and Engineering',
+      institutionId: institution.id,
+      programs: { create: [{ name: 'B.Tech Computer Science' }] }
+    },
+    include: { programs: true }
+  });
+
+  const btechCse = cseDept.programs[0];
+
+  // 4. Demo Faculty User
+  const facultyUser = await prisma.user.upsert({
+    where: { email: 'faculty@hvk.edu' },
     update: {},
     create: {
-      email: 'student@campus.os',
+      email: 'faculty@hvk.edu',
       passwordHash,
       institutionId: institution.id,
-      roles: {
-        create: { roleId: studentRole.id }
-      },
+      roles: { create: { roleId: facultyRole.id } },
+      facultyProfile: {
+        create: {
+          employeeId: 'EMP-CSE-001',
+          firstName: 'Dr. Ramesh',
+          lastName: 'Kumar',
+          designation: 'Associate Professor',
+          department: cseDept.name
+        }
+      }
+    },
+    include: { facultyProfile: true }
+  });
+
+  // 5. Demo Student User
+  const studentUser = await prisma.user.upsert({
+    where: { email: 'student@hvk.edu' },
+    update: {},
+    create: {
+      email: 'student@hvk.edu',
+      passwordHash,
+      institutionId: institution.id,
+      roles: { create: { roleId: studentRole.id } },
       studentProfile: {
         create: {
           enrollmentNumber: '21BCE0001',
@@ -50,29 +69,43 @@ async function main() {
           lastName: 'Sharma',
           currentSemester: 5,
           cgpa: 8.6,
-          program: {
-            create: {
-              name: 'B.Tech Computer Science',
-              department: {
-                create: {
-                  name: 'Computer Science and Engineering',
-                  institutionId: institution.id
-                }
-              }
-            }
-          }
+          programId: btechCse.id
         }
+      }
+    },
+    include: { studentProfile: true }
+  });
+
+  // 6. Course & Enrollment
+  const course = await prisma.course.upsert({
+    where: { code: 'CSE3002' },
+    update: {},
+    create: {
+      code: 'CSE3002',
+      name: 'Data Structures and Algorithms',
+      credits: 4,
+      departmentId: cseDept.id,
+      facultyId: facultyUser.facultyProfile!.id,
+      enrollments: {
+        create: { studentId: studentUser.studentProfile!.id }
+      },
+      sessions: {
+        create: [
+          { date: new Date(new Date().setHours(9, 0, 0, 0)), topic: 'Graph Theory' },
+          { date: new Date(new Date().setDate(new Date().getDate() - 1)), topic: 'Binary Trees' } // Yesterday
+        ]
       }
     }
   });
 
-  console.log('Created Demo Student: student@campus.os / password123');
+  console.log('✅ Seeding complete!');
+  console.log('Login credentials:');
+  console.log('  STUDENT: student@hvk.edu / password123');
+  console.log('  FACULTY: faculty@hvk.edu / password123');
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-  })
+  .then(async () => { await prisma.$disconnect(); })
   .catch(async (e) => {
     console.error(e);
     await prisma.$disconnect();

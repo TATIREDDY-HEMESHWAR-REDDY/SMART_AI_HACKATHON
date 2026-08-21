@@ -29,7 +29,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, userRoles = [] }) => {
   return (
     <aside className="w-64 bg-slate-900 text-slate-300 flex flex-col h-full">
       <div className="h-16 flex items-center px-6 font-bold text-xl text-white border-b border-slate-800">
-        Campus OS
+        HVK
       </div>
       
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
@@ -53,7 +53,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ items, userRoles = [] }) => {
       </nav>
       
       <div className="p-4 border-t border-slate-800 text-xs text-slate-500">
-        &copy; 2026 Campus OS
+        &copy; 2026 Hayagriva Vidya Kendram
       </div>
     </aside>
   );
