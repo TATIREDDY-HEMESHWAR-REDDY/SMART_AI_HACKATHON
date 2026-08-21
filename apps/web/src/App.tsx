@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-route
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
 import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck } from 'lucide-react';
 import { Login } from './pages/Login';
+import { Attendance } from './pages/Attendance';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
@@ -31,10 +32,24 @@ const ProtectedLayout = () => {
 
   if (!user) return null;
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    navigate('/login');
+  const handleLogout = async () => {
+    try {
+      await fetch('http://localhost:3000/api/v1/auth/logout', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({ refreshToken: localStorage.getItem('refreshToken') })
+      });
+    } catch (err) {
+      console.error('Logout failed:', err);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
+      localStorage.removeItem('user');
+      navigate('/login');
+    }
   };
 
   return (
@@ -69,6 +84,8 @@ export const App = () => {
               </div>
             </div>
           } />
+          
+          <Route path="/attendance" element={<Attendance />} />
           
           <Route path="/placement" element={
             <RoleGuard allowedRoles={['STUDENT', 'TPO', 'RECRUITER']} userRoles={['STUDENT']}>

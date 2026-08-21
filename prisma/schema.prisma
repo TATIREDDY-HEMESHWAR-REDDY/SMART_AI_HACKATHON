@@ -24,6 +24,7 @@ model Department {
   institutionId String
   institution   Institution @relation(fields: [institutionId], references: [id])
   programs      Program[]
+  courses       Course[]
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 }
@@ -50,6 +51,16 @@ model User {
   roles          UserRole[]
   studentProfile StudentProfile?
   facultyProfile FacultyProfile?
+  refreshTokens  RefreshToken[]
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
 }
 
 model Role {
@@ -98,6 +109,10 @@ model StudentProfile {
   program          Program  @relation(fields: [programId], references: [id])
   currentSemester  Int      @default(1)
   cgpa             Float    @default(0.0)
+  
+  enrollments      CourseEnrollment[]
+  attendance       AttendanceRecord[]
+
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
@@ -111,6 +126,72 @@ model FacultyProfile {
   lastName      String
   designation   String
   department    String?
+  
+  courses       Course[]
+
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+}
+
+// ==========================================
+// STAGE 1: ACADEMICS & ATTENDANCE
+// ==========================================
+
+model Course {
+  id           String             @id @default(uuid())
+  code         String             @unique // e.g., CSE3002
+  name         String
+  credits      Int                @default(3)
+  departmentId String
+  department   Department         @relation(fields: [departmentId], references: [id])
+  facultyId    String
+  faculty      FacultyProfile     @relation(fields: [facultyId], references: [id])
+  
+  enrollments  CourseEnrollment[]
+  sessions     ClassSession[]
+  
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+}
+
+model CourseEnrollment {
+  id        String         @id @default(uuid())
+  courseId  String
+  studentId String
+  course    Course         @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  student   StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  
+  @@unique([courseId, studentId])
+}
+
+model ClassSession {
+  id        String             @id @default(uuid())
+  courseId  String
+  course    Course             @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  date      DateTime
+  topic     String?
+  records   AttendanceRecord[]
+  createdAt DateTime           @default(now())
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
+}
+
+model AttendanceRecord {
+  id        String           @id @default(uuid())
+  sessionId String
+  studentId String
+  session   ClassSession     @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  student   StudentProfile   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  status    AttendanceStatus
+  remarks   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@unique([sessionId, studentId])
 }

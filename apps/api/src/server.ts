@@ -5,6 +5,7 @@ import { ApiErrorResponse } from '@campus-os/types';
 
 import { authPlugin } from './plugins/auth';
 import authRoutes from './modules/auth/auth.routes';
+import attendanceRoutes from './modules/attendance/attendance.routes';
 
 dotenv.config({ path: '../../.env' });
 
@@ -34,6 +35,7 @@ server.get('/api/v1/health', async () => {
 
 // Register Modules
 server.register(authRoutes, { prefix: '/api/v1/auth' });
+server.register(attendanceRoutes, { prefix: '/api/v1/attendance' });
 
 const start = async () => {
   try {
