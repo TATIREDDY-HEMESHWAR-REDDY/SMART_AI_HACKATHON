@@ -1,18 +1,18 @@
 import Fastify from 'fastify';
 import cors from '@fastify/cors';
-import jwt from '@fastify/jwt';
-import { PrismaClient } from '@prisma/client';
 import dotenv from 'dotenv';
-import { ApiSuccessResponse, ApiErrorResponse } from '@campus-os/types';
+import { ApiErrorResponse } from '@campus-os/types';
+
+import { authPlugin } from './plugins/auth';
+import authRoutes from './modules/auth/auth.routes';
 
 dotenv.config({ path: '../../.env' });
 
-const prisma = new PrismaClient();
 const server = Fastify({ logger: true });
 
 // Plugins
 server.register(cors, { origin: true });
-server.register(jwt, { secret: process.env.AUTH_SECRET || 'fallback-secret-key-12345' });
+server.register(authPlugin);
 
 // Global Error Handler formatting
 server.setErrorHandler((error, request, reply) => {
@@ -27,35 +27,18 @@ server.setErrorHandler((error, request, reply) => {
   reply.status(error.statusCode || 500).send(response);
 });
 
-// Basic Health/Me Route
+// Basic Health Route
 server.get('/api/v1/health', async () => {
   return { success: true, data: { status: 'ok', timestamp: new Date().toISOString() } };
 });
 
-// Basic Login Route (Placeholder)
-server.post('/api/v1/auth/login', async (request, reply) => {
-  // TODO: Validate Zod schema, check DB password hash, sign JWT
-  const { email, password } = request.body as any;
-  
-  const user = await prisma.user.findUnique({ where: { email }, include: { roles: { include: { role: true } } } });
-  if (!user || password !== 'demo') { // Demo hardcode for MVP scaffold
-    reply.status(401);
-    throw new Error('Invalid credentials');
-  }
-
-  const token = server.jwt.sign({ id: user.id, roles: user.roles.map(r => r.role.name) });
-  
-  const response: ApiSuccessResponse<any> = {
-    success: true,
-    data: { token, user: { id: user.id, email: user.email } }
-  };
-  return response;
-});
+// Register Modules
+server.register(authRoutes, { prefix: '/api/v1/auth' });
 
 const start = async () => {
   try {
     await server.listen({ port: 3000, host: '0.0.0.0' });
-    console.log('🚀 Server listening at http://localhost:3000');
+    console.log('🚀 API Server listening at http://localhost:3000');
   } catch (err) {
     server.log.error(err);
     process.exit(1);
