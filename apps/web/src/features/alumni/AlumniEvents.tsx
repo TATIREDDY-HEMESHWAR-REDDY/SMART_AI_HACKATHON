@@ -31,7 +31,7 @@ export function AlumniEvents() {
 
   const fetchEvents = async () => {
     try {
-      const res = await fetch('/api/v1/alumni/events', {
+      const res = await fetch('http://localhost:3000/api/v1/alumni/events', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
@@ -49,7 +49,7 @@ export function AlumniEvents() {
   const handleCreateEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/v1/alumni/events', {
+      const res = await fetch('http://localhost:3000/api/v1/alumni/events', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -89,8 +89,8 @@ export default async function attendanceRoutes(server: FastifyInstance) {
   server.get('/student/:id', { preValidation: [server.requireAuth] }, async (request, reply) => {
     const { id } = request.params as { id: string };
 
-    // Security: Student can only view their own stats
-    if (request.user.roles.includes('STUDENT') && request.user.id !== id) {
+    // PRIVACY FIX: Block students from seeing other students' attendance
+    if (request.user.id !== id && !request.user.roles.some((r: string) => ['COLLEGE_ADMIN', 'ADMIN', 'FACULTY'].includes(r))) {
       return reply.status(403).send({ success: false, message: 'Forbidden' });
     }
 

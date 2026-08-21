@@ -24,7 +24,7 @@ export const CareerReadiness = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const res = await fetch('/api/v1/career/readiness/me');
+        const res = await fetch('http://localhost:3000/api/v1/career/readiness/me', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
         const json = await res.json();
         if (json.success) {
           setReadiness(json.data.readiness);

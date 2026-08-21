@@ -51,9 +51,9 @@ export const CareerAssessment = () => {
       // Assuming authorization token is either mocked or handled globally by the browser session
       
       const [assessmentsRes, resultsRes, readinessRes] = await Promise.all([
-        fetch('/api/v1/career/assessments').then(res => res.json()),
-        fetch('/api/v1/career/assessments/me/results').then(res => res.json()),
-        fetch('/api/v1/career/readiness/me').then(res => res.json())
+        fetch('http://localhost:3000/api/v1/career/assessments', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+        fetch('http://localhost:3000/api/v1/career/assessments/me/results', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json()),
+        fetch('http://localhost:3000/api/v1/career/readiness/me', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }).then(res => res.json())
       ]);
 
       if (assessmentsRes.success) setAssessments(assessmentsRes.data.assessments);
@@ -70,9 +70,9 @@ export const CareerAssessment = () => {
   const startAssessment = async (id: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/v1/career/assessments/start', {
+      const response = await fetch('http://localhost:3000/api/v1/career/assessments/start', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ assessmentId: id })
       });
       const data = await response.json();

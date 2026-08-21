@@ -1,144 +1,76 @@
-import { randomUUID } from 'crypto';
 
-export interface AlumniProfileData {
-  id: string;
-  userId: string;
-  name: string; // Included for convenience in UI, fetched from user in a real scenario
-  graduationYear: number;
-  currentCompany?: string;
-  currentRole?: string;
-  linkedInUrl?: string;
-  expertise: string[];
-}
-
-export interface MentorshipRequest {
-  id: string;
-  studentId: string;
-  alumniId: string;
-  message: string;
-  status: 'PENDING' | 'ACCEPTED' | 'REJECTED';
-}
-
-export interface MentorshipSession {
-  id: string;
-  requestId: string;
-  scheduledAt: string;
-  meetingLink: string;
-}
-
-export interface AlumniEvent {
-  id: string;
-  creatorId: string;
-  title: string;
-  description: string;
-  date: string;
-  location: string;
-}
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 class AlumniDataStore {
-  private profiles: AlumniProfileData[] = [
-    {
-      id: randomUUID(),
-      userId: 'mock-alumni-1-id',
-      name: 'Alice Johnson',
-      graduationYear: 2021,
-      currentCompany: 'Tech Corp',
-      currentRole: 'Senior Software Engineer',
-      linkedInUrl: 'https://linkedin.com/in/alice',
-      expertise: ['React', 'Node.js', 'System Design'],
-    },
-    {
-      id: randomUUID(),
-      userId: 'mock-alumni-2-id',
-      name: 'Bob Smith',
-      graduationYear: 2019,
-      currentCompany: 'Data Inc',
-      currentRole: 'Data Scientist',
-      linkedInUrl: 'https://linkedin.com/in/bob',
-      expertise: ['Python', 'Machine Learning', 'Data Analysis'],
-    },
-  ];
-
-  getDirectory(): AlumniProfileData[] {
-    return this.profiles;
+  async getDirectory() {
+    return prisma.alumniProfile.findMany({
+      include: { user: { select: { email: true } } }
+    });
   }
 
-  getProfileByUserId(userId: string): AlumniProfileData | undefined {
-    return this.profiles.find((p) => p.userId === userId);
+  async getProfileByUserId(userId: string) {
+    return prisma.alumniProfile.findUnique({
+      where: { userId },
+      include: { user: { select: { email: true } } }
+    });
   }
 
-  updateProfile(userId: string, data: Partial<AlumniProfileData>): AlumniProfileData {
-    let profile = this.getProfileByUserId(userId);
-    if (!profile) {
-      // Create if doesn't exist for the user (mock behavior)
-      profile = {
-        id: randomUUID(),
-        userId,
-        name: 'Current User', // Placeholder
-        graduationYear: new Date().getFullYear(),
-        expertise: [],
-        ...data,
-      };
-      this.profiles.push(profile);
-    } else {
-      Object.assign(profile, data);
+  async updateProfile(userId: string, data: any) {
+    const existing = await prisma.alumniProfile.findUnique({ where: { userId } });
+    if (!existing) {
+      return prisma.alumniProfile.create({
+        data: {
+          userId,
+          graduationYear: data.graduationYear || new Date().getFullYear(),
+          currentCompany: data.currentCompany,
+          currentRole: data.currentRole,
+          linkedInUrl: data.linkedInUrl,
+          expertise: data.expertise || []
+        }
+      });
     }
-    return profile;
+    return prisma.alumniProfile.update({
+      where: { userId },
+      data: {
+        graduationYear: data.graduationYear,
+        currentCompany: data.currentCompany,
+        currentRole: data.currentRole,
+        linkedInUrl: data.linkedInUrl,
+        expertise: data.expertise
+      }
+    });
   }
 
-  // --- Mentorship Data Methods ---
-  private mentorshipRequests: MentorshipRequest[] = [];
-  private mentorshipSessions: MentorshipSession[] = [];
-
-  createMentorshipRequest(studentId: string, alumniId: string, message: string): MentorshipRequest {
-    const req: MentorshipRequest = {
-      id: randomUUID(),
-      studentId,
-      alumniId,
-      message,
-      status: 'PENDING'
-    };
-    this.mentorshipRequests.push(req);
-    return req;
+  async createMentorshipRequest(studentId: string, alumniId: string, message: string) {
+    return prisma.mentorshipRequest.create({
+      data: { studentId, alumniId, message, status: 'PENDING' }
+    });
   }
 
-  updateMentorshipRequestStatus(requestId: string, status: 'ACCEPTED' | 'REJECTED'): MentorshipRequest | null {
-    const req = this.mentorshipRequests.find(r => r.id === requestId);
-    if (!req) return null;
-    req.status = status;
-    return req;
+  async updateMentorshipRequestStatus(requestId: string, status: string) {
+    return prisma.mentorshipRequest.update({
+      where: { id: requestId },
+      data: { status }
+    });
   }
 
-  createMentorshipSession(requestId: string, scheduledAt: string, meetingLink: string): MentorshipSession {
-    const session: MentorshipSession = {
-      id: randomUUID(),
-      requestId,
-      scheduledAt,
-      meetingLink
-    };
-    this.mentorshipSessions.push(session);
-    return session;
+  async createMentorshipSession(requestId: string, scheduledAt: string, meetingLink: string) {
+    return prisma.mentorshipSession.create({
+      data: { requestId, scheduledAt: new Date(scheduledAt), meetingLink }
+    });
   }
 
-  // --- Events Data Methods ---
-  private events: AlumniEvent[] = [];
-
-  createEvent(creatorId: string, title: string, description: string, date: string, location: string): AlumniEvent {
-    const event: AlumniEvent = {
-      id: randomUUID(),
-      creatorId,
-      title,
-      description,
-      date,
-      location
-    };
-    this.events.push(event);
-    return event;
+  async createEvent(creatorId: string, title: string, description: string, date: string, location: string) {
+    return prisma.alumniEvent.create({
+      data: { title, description, date: new Date(date), location }
+    });
   }
 
-  getEvents(): AlumniEvent[] {
-    return this.events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  async getEvents() {
+    return prisma.alumniEvent.findMany({ orderBy: { date: 'asc' } });
   }
 }
 
 export const alumniData = new AlumniDataStore();
+

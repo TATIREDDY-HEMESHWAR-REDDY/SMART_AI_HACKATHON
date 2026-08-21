@@ -9,6 +9,11 @@ export default async function usersRoutes(server: FastifyInstance) {
   server.get('/:id', { preValidation: [server.requireAuth] }, async (request, reply) => {
     const { id } = request.params as { id: string };
 
+    // PRIVACY FIX: Only allow the user themselves, or admins/faculty to view the profile
+    if (request.user.id !== id && !request.user.roles.some((r: string) => ['COLLEGE_ADMIN', 'ADMIN', 'FACULTY'].includes(r))) {
+      return reply.status(403).send({ success: false, message: 'Forbidden: Cannot view other users\' profiles' });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id },
       select: {
@@ -43,6 +48,11 @@ export default async function usersRoutes(server: FastifyInstance) {
   // GET /api/v1/users/students/:id
   server.get('/students/:id', { preValidation: [server.requireAuth] }, async (request, reply) => {
     const { id } = request.params as { id: string };
+
+    // PRIVACY FIX: Only allow the user themselves, or admins/faculty to view the student profile
+    if (request.user.id !== id && !request.user.roles.some((r: string) => ['COLLEGE_ADMIN', 'ADMIN', 'FACULTY'].includes(r))) {
+      return reply.status(403).send({ success: false, message: 'Forbidden: Cannot view other students\' profiles' });
+    }
 
     const studentProfile = await prisma.studentProfile.findUnique({
       where: { userId: id },

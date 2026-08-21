@@ -8,7 +8,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   server.get('/directory', {
     preValidation: [(server as any).requireAuth, (server as any).requireRole(['STUDENT', 'TPO', 'ALUMNI', 'FACULTY'])]
   }, async (request, reply) => {
-    const directory = alumniData.getDirectory();
+    const directory = await alumniData.getDirectory();
     return reply.send({ success: true, data: directory });
   });
 
@@ -18,7 +18,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
     preValidation: [(server as any).requireAuth, (server as any).requireRole(['ALUMNI'])]
   }, async (request, reply) => {
     const user = request.user as any;
-    const profile = alumniData.getProfileByUserId(user.id);
+    const profile = await alumniData.getProfileByUserId(user.id);
     
     if (!profile) {
       return reply.send({ success: true, data: null });
@@ -42,7 +42,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
       });
     }
 
-    const updatedProfile = alumniData.updateProfile(user.id, parsedBody.data);
+    const updatedProfile = await alumniData.updateProfile(user.id, parsedBody.data);
     return reply.send({ success: true, data: updatedProfile });
   });
 
@@ -56,7 +56,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
     if (!parsedBody.success) {
       return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid request' } });
     }
-    const reqData = alumniData.createMentorshipRequest(user.id, parsedBody.data.alumniId, parsedBody.data.message);
+    const reqData = await alumniData.createMentorshipRequest(user.id, parsedBody.data.alumniId, parsedBody.data.message);
     return reply.send({ success: true, data: reqData });
   });
 
@@ -70,7 +70,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
     if (!parsedBody.success) {
       return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid response' } });
     }
-    const updated = alumniData.updateMentorshipRequestStatus(id, parsedBody.data.status);
+    const updated = await alumniData.updateMentorshipRequestStatus(id, parsedBody.data.status);
     if (!updated) {
       return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Request not found' } });
     }
@@ -86,7 +86,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
     if (!parsedBody.success) {
       return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid session data' } });
     }
-    const session = alumniData.createMentorshipSession(parsedBody.data.requestId, parsedBody.data.scheduledAt, parsedBody.data.meetingLink);
+    const session = await alumniData.createMentorshipSession(parsedBody.data.requestId, parsedBody.data.scheduledAt, parsedBody.data.meetingLink);
     return reply.send({ success: true, data: session });
   });
 
@@ -95,7 +95,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   server.get('/events', {
     preValidation: [(server as any).requireAuth, (server as any).requireRole(['STUDENT', 'ALUMNI', 'TPO', 'FACULTY'])]
   }, async (request, reply) => {
-    const events = alumniData.getEvents();
+    const events = await alumniData.getEvents();
     return reply.send({ success: true, data: events });
   });
 
@@ -109,7 +109,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
     if (!parsedBody.success) {
       return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: 'Invalid event data' } });
     }
-    const event = alumniData.createEvent(user.id, parsedBody.data.title, parsedBody.data.description, parsedBody.data.date, parsedBody.data.location);
+    const event = await alumniData.createEvent(user.id, parsedBody.data.title, parsedBody.data.description, parsedBody.data.date, parsedBody.data.location);
     return reply.send({ success: true, data: event });
   });
 }

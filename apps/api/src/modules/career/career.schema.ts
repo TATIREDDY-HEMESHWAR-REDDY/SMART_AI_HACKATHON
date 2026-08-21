@@ -3,6 +3,10 @@ import { z } from 'zod';
 export const updateCareerProfileSchema = z.object({
   targetRole: z.string().min(1, 'Target role is required'),
   targetIndustry: z.string().min(1, 'Target industry is required'),
+  interests: z.array(z.string()).optional(),
+  projects: z.array(z.string()).optional(),
+  certifications: z.array(z.string()).optional(),
+  internships: z.array(z.string()).optional(),
 });
 
 export type UpdateCareerProfileInput = z.infer<typeof updateCareerProfileSchema>;

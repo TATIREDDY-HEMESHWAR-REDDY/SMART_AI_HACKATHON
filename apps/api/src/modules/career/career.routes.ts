@@ -38,8 +38,10 @@ export default async function careerRoutes(server: FastifyInstance) {
 
     const goals = await careerDataLayer.getCareerGoalsByStudent(studentId);
     const skills = await careerDataLayer.getStudentSkills(studentId);
+    const readiness = await careerDataLayer.getReadinessScore(studentId);
 
     const activeGoal = goals[0] || null;
+    const profile = await prisma.studentProfile.findUnique({ where: { id: studentId } });
 
     const response: ApiSuccessResponse = {
       success: true,
@@ -49,6 +51,11 @@ export default async function careerRoutes(server: FastifyInstance) {
           targetIndustry: activeGoal.targetIndustry,
           isActive: activeGoal.isActive,
         } : null,
+        interests: profile?.interests || [],
+        projects: profile?.projects || [],
+        certifications: profile?.certifications || [],
+        internships: profile?.internships || [],
+        readinessSummary: readiness,
         skills: skills.map(ss => ({
           id: ss.id,
           skillId: ss.skillId,
@@ -80,8 +87,18 @@ export default async function careerRoutes(server: FastifyInstance) {
       return;
     }
 
-    const { targetRole, targetIndustry } = parsed.data;
+    const { targetRole, targetIndustry, interests, projects, certifications, internships } = parsed.data;
     const updatedGoal = await careerDataLayer.upsertCareerGoal(studentId, targetRole, targetIndustry);
+
+    const updatedProfile = await prisma.studentProfile.update({
+      where: { id: studentId },
+      data: {
+        ...(interests && { interests }),
+        ...(projects && { projects }),
+        ...(certifications && { certifications }),
+        ...(internships && { internships })
+      }
+    });
 
     const response: ApiSuccessResponse = {
       success: true,
@@ -90,7 +107,11 @@ export default async function careerRoutes(server: FastifyInstance) {
           targetRole: updatedGoal.targetRole,
           targetIndustry: updatedGoal.targetIndustry,
           isActive: updatedGoal.isActive
-        }
+        },
+        interests: updatedProfile.interests,
+        projects: updatedProfile.projects,
+        certifications: updatedProfile.certifications,
+        internships: updatedProfile.internships
       }
     };
     return response;

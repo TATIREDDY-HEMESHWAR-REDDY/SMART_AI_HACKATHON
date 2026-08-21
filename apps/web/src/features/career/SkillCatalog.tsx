@@ -11,7 +11,7 @@ export const SkillCatalog: React.FC = () => {
   const fetchSkills = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:3000/api/v1/career/skills');
+      const response = await fetch('http://localhost:3000/api/v1/career/skills', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } });
       const result = await response.json();
       if (!result.success) throw new Error(result.error?.message || 'Failed to fetch');
       
@@ -33,7 +33,7 @@ export const SkillCatalog: React.FC = () => {
       setAddError(null);
       const response = await fetch('http://localhost:3000/api/v1/career/skills/me', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
         body: JSON.stringify({ skillId, proficiencyLevel: level })
       });
       const result = await response.json();

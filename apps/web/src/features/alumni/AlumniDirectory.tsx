@@ -40,7 +40,7 @@ export function AlumniDirectory() {
 
   const fetchDirectory = async () => {
     try {
-      const res = await fetch('/api/v1/alumni/directory', {
+      const res = await fetch('http://localhost:3000/api/v1/alumni/directory', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
@@ -57,7 +57,7 @@ export function AlumniDirectory() {
 
   const fetchMyProfile = async () => {
     try {
-      const res = await fetch('/api/v1/alumni/profile/me', {
+      const res = await fetch('http://localhost:3000/api/v1/alumni/profile/me', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
@@ -81,7 +81,7 @@ export function AlumniDirectory() {
   const handleUpdateProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const res = await fetch('/api/v1/alumni/profile/me', {
+      const res = await fetch('http://localhost:3000/api/v1/alumni/profile/me', {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -110,7 +110,7 @@ export function AlumniDirectory() {
 
   const handleRequestMentorship = async (alumniId: string) => {
     try {
-      const res = await fetch('/api/v1/alumni/mentorship/request', {
+      const res = await fetch('http://localhost:3000/api/v1/alumni/mentorship/request', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

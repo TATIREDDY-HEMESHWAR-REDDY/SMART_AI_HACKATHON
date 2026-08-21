@@ -9,7 +9,7 @@ export default async function placementRoutes(server: FastifyInstance) {
     preHandler: [server.requireRole(['RECRUITER', 'TPO'])],
     handler: async (request, reply) => {
       const data = createCompanySchema.parse(request.body);
-      const company = PlacementData.createCompany(data);
+      const company = await PlacementData.createCompany(data);
       return { success: true, data: { company } };
     }
   });
@@ -19,7 +19,7 @@ export default async function placementRoutes(server: FastifyInstance) {
     handler: async (request: any, reply) => {
       const { id } = request.params;
       const data = verifyCompanySchema.parse(request.body);
-      const company = PlacementData.verifyCompany(id, data.status);
+      const company = await PlacementData.verifyCompany(id, data.status);
       if (!company) {
         return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Company not found' } });
       }
@@ -30,7 +30,7 @@ export default async function placementRoutes(server: FastifyInstance) {
   server.get('/recruiters/me', {
     preHandler: [server.requireRole(['RECRUITER'])],
     handler: async (request: any, reply) => {
-      const recruiter = PlacementData.getRecruiterMe(request.user.id);
+      const recruiter = await PlacementData.getRecruiterMe(request.user.id);
       return { success: true, data: { recruiter } };
     }
   });
@@ -39,7 +39,7 @@ export default async function placementRoutes(server: FastifyInstance) {
     preHandler: [server.requireRole(['TPO'])],
     handler: async (request, reply) => {
       const data = createDriveSchema.parse(request.body);
-      const drive = PlacementData.createDrive(data);
+      const drive = await PlacementData.createDrive(data);
       return { success: true, data: { drive } };
     }
   });
@@ -49,7 +49,7 @@ export default async function placementRoutes(server: FastifyInstance) {
     handler: async (request: any, reply) => {
       const { driveId } = request.params;
       const data = createJobSchema.parse(request.body);
-      const job = PlacementData.createJob(driveId, data);
+      const job = await PlacementData.createJob(driveId, data);
       return { success: true, data: { job } };
     }
   });

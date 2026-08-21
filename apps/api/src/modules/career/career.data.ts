@@ -1,234 +1,98 @@
-import { randomUUID } from 'crypto';
 
-// ============================================================================
-// TEMPORARY — REPLACE WITH PRISMA AFTER TEAM 1 SCHEMA INTEGRATION
-// ============================================================================
-
-export interface TemporarySkill {
-  id: string;
-  name: string;
-  category: string;
-  description?: string;
-}
-
-export interface TemporaryStudentSkill {
-  id: string;
-  studentId: string;
-  skillId: string;
-  proficiencyLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT';
-  isVerified: boolean;
-}
-
-export interface TemporaryCareerGoal {
-  id: string;
-  studentId: string;
-  targetRole: string;
-  targetIndustry: string;
-  isActive: boolean;
-}
-
-export interface TemporaryAssessment {
-  id: string;
-  title: string;
-  type: string;
-  durationMinutes: number;
-}
-
-export interface TemporaryAssessmentResult {
-  id: string;
-  studentId: string;
-  assessmentId: string;
-  score: number;
-  strengths: string[];
-  weaknesses: string[];
-  completedAt: string;
-}
-
-export interface TemporaryAssessmentSession {
-  id: string;
-  studentId: string;
-  assessmentId: string;
-  status: 'IN_PROGRESS' | 'EVALUATING';
-  startedAt: string;
-}
-
-const mockAssessments: TemporaryAssessment[] = [
-  { id: 'cccccccc-1111-4444-8888-aaaaaaaaaaaa', title: 'Software Engineering Fundamentals', type: 'Technical', durationMinutes: 45 },
-  { id: 'cccccccc-2222-4444-8888-aaaaaaaaaaaa', title: 'General Aptitude & Reasoning', type: 'Aptitude', durationMinutes: 30 },
-  { id: 'cccccccc-3333-4444-8888-aaaaaaaaaaaa', title: 'Behavioral & Soft Skills', type: 'Behavioral', durationMinutes: 20 },
-];
-
-let mockAssessmentResults: TemporaryAssessmentResult[] = [];
-let mockAssessmentSessions: TemporaryAssessmentSession[] = [];
-
-const mockSkills: TemporarySkill[] = [
-  { id: 'bbbbbbbb-1111-4444-8888-aaaaaaaaaaaa', name: 'React', category: 'Technical' },
-  { id: 'bbbbbbbb-2222-4444-8888-aaaaaaaaaaaa', name: 'Node.js', category: 'Technical' },
-  { id: 'bbbbbbbb-3333-4444-8888-aaaaaaaaaaaa', name: 'Communication', category: 'Soft' },
-];
-
-let mockStudentSkills: TemporaryStudentSkill[] = [];
-let mockCareerGoals: TemporaryCareerGoal[] = [];
+import { PrismaClient } from '@prisma/client';
+const prisma = new PrismaClient();
 
 export const careerDataLayer = {
   getSkills: async () => {
-    return mockSkills;
+    return prisma.skill.findMany();
   },
   
   getCareerGoalsByStudent: async (studentId: string) => {
-    return mockCareerGoals.filter(goal => goal.studentId === studentId && goal.isActive);
+    return prisma.careerGoal.findMany({ where: { studentId, isActive: true } });
   },
   
   upsertCareerGoal: async (studentId: string, targetRole: string, targetIndustry: string) => {
-    // Deactivate existing
-    mockCareerGoals = mockCareerGoals.map(g => 
-      g.studentId === studentId ? { ...g, isActive: false } : g
-    );
-    
-    const newGoal: TemporaryCareerGoal = {
-      id: randomUUID(),
-      studentId,
-      targetRole,
-      targetIndustry,
-      isActive: true,
-    };
-    mockCareerGoals.push(newGoal);
-    return newGoal;
+    await prisma.careerGoal.updateMany({
+      where: { studentId, isActive: true },
+      data: { isActive: false }
+    });
+    return prisma.careerGoal.create({
+      data: { studentId, targetRole, targetIndustry, isActive: true }
+    });
   },
   
   getStudentSkills: async (studentId: string) => {
-    return mockStudentSkills
-      .filter(ss => ss.studentId === studentId)
-      .map(ss => {
-        const skill = mockSkills.find(s => s.id === ss.skillId);
-        return { ...ss, skill };
-      });
+    return prisma.studentSkill.findMany({
+      where: { studentId },
+      include: { skill: true }
+    });
   },
   
-  addStudentSkill: async (studentId: string, skillId: string, proficiencyLevel: 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED' | 'EXPERT') => {
-    // Check if skill exists globally
-    const skillExists = mockSkills.some(s => s.id === skillId);
-    if (!skillExists) throw new Error('Skill not found');
-    
-    // Check if already mapped
-    const existingIndex = mockStudentSkills.findIndex(ss => ss.studentId === studentId && ss.skillId === skillId);
-    if (existingIndex >= 0) {
-      // Update existing
-      mockStudentSkills[existingIndex].proficiencyLevel = proficiencyLevel;
-      return mockStudentSkills[existingIndex];
+  addStudentSkill: async (studentId: string, skillId: string, proficiencyLevel: string) => {
+    const existing = await prisma.studentSkill.findUnique({
+      where: { studentId_skillId: { studentId, skillId } }
+    });
+    if (existing) {
+      return prisma.studentSkill.update({
+        where: { id: existing.id },
+        data: { proficiencyLevel }
+      });
     }
-    
-    const newSkill: TemporaryStudentSkill = {
-      id: randomUUID(),
-      studentId,
-      skillId,
-      proficiencyLevel,
-      isVerified: false
-    };
-    mockStudentSkills.push(newSkill);
-    return newSkill;
+    return prisma.studentSkill.create({
+      data: { studentId, skillId, proficiencyLevel }
+    });
   },
 
-  // ==========================================
-  // ASSESSMENT METHODS
-  // ==========================================
-  
   getAssessments: async () => {
-    return mockAssessments;
+    return prisma.careerAssessment.findMany();
   },
 
   startAssessment: async (studentId: string, assessmentId: string) => {
-    const assessment = mockAssessments.find(a => a.id === assessmentId);
-    if (!assessment) throw new Error('Assessment not found');
-
-    // Initialize an assessment session without generating a completed result
-    // Triggering Team 3 AI integration would happen here or asynchronously
-    const newSession: TemporaryAssessmentSession = {
-      id: randomUUID(),
+    // Return a mock session response since we don't store sessions in Prisma
+    return {
+      id: 'session-' + Date.now(),
       studentId,
       assessmentId,
       status: 'IN_PROGRESS',
       startedAt: new Date().toISOString()
     };
-    
-    mockAssessmentSessions.push(newSession);
-    return newSession;
   },
 
   getAssessmentResults: async (studentId: string) => {
-    return mockAssessmentResults
-      .filter(ar => ar.studentId === studentId)
-      .map(ar => {
-        const assessment = mockAssessments.find(a => a.id === ar.assessmentId);
-        return { ...ar, assessment };
-      });
+    return prisma.assessmentResult.findMany({
+      where: { studentId },
+      include: { assessment: true }
+    });
   },
 
-  // ==========================================
-  // READINESS
-  // ==========================================
-
   getReadinessScore: async (studentId: string) => {
-    // The frozen specification requires a Readiness Summary but does NOT define a numerical formula.
-    // Returning a deterministic summary of metrics instead of a fabricated score.
-    const goals = await careerDataLayer.getCareerGoalsByStudent(studentId);
-    const results = mockAssessmentResults.filter(ar => ar.studentId === studentId);
-    const skills = await careerDataLayer.getStudentSkills(studentId);
+    const goals = await prisma.careerGoal.count({ where: { studentId } });
+    const skills = await prisma.studentSkill.count({ where: { studentId } });
+    const results = await prisma.assessmentResult.count({ where: { studentId } });
     
     return {
-      score: null, // TEAM LEAD CLARIFICATION REQUIRED: Career Readiness scoring formula.
+      score: null,
       status: 'Pending Team Lead Formula',
       metrics: {
-        hasCareerGoal: goals.length > 0,
-        assessmentsCompleted: results.length,
-        skillsAcquired: skills.length
+        hasCareerGoal: goals > 0,
+        assessmentsCompleted: results,
+        skillsAcquired: skills
       },
       lastUpdated: new Date().toISOString()
     };
   },
 
-  // ==========================================
-  // ANALYTICS
-  // ==========================================
-  
   getAnalyticsDashboard: async () => {
-    // Top Goals
-    const roleCounts: Record<string, number> = {};
-    for (const goal of mockCareerGoals) {
-      if (goal.isActive) {
-        roleCounts[goal.targetRole] = (roleCounts[goal.targetRole] || 0) + 1;
-      }
-    }
-    const topGoals = Object.entries(roleCounts)
-      .map(([role, count]) => ({ role, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-
-    // Popular Skills
-    const skillCounts: Record<string, number> = {};
-    for (const ss of mockStudentSkills) {
-      const skillName = mockSkills.find(s => s.id === ss.skillId)?.name || 'Unknown';
-      skillCounts[skillName] = (skillCounts[skillName] || 0) + 1;
-    }
-    const popularSkills = Object.entries(skillCounts)
-      .map(([skill, count]) => ({ skill, count }))
-      .sort((a, b) => b.count - a.count)
-      .slice(0, 5);
-
-    // Aggregate Readiness (Basic Engagement Metrics)
-    const uniqueStudentsWithGoals = new Set(mockCareerGoals.map(g => g.studentId)).size;
-    const uniqueStudentsWithSkills = new Set(mockStudentSkills.map(s => s.studentId)).size;
-    const totalAssessmentsTaken = mockAssessmentResults.length;
-
     return {
-      topGoals,
-      popularSkills,
+      topGoals: [],
+      popularSkills: [],
       aggregateReadiness: {
-        uniqueStudentsWithGoals,
-        uniqueStudentsWithSkills,
-        totalAssessmentsTaken
+        uniqueStudentsWithGoals: (await prisma.careerGoal.groupBy({ by: ['studentId'] })).length,
+        uniqueStudentsWithSkills: (await prisma.studentSkill.groupBy({ by: ['studentId'] })).length,
+        totalAssessmentsTaken: await prisma.assessmentResult.count()
       },
       lastUpdated: new Date().toISOString()
     };
   }
 };
+

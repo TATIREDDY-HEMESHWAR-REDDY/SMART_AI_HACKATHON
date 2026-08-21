@@ -24,7 +24,7 @@ export function CareerAnalytics() {
 
   const fetchAnalytics = async () => {
     try {
-      const res = await fetch('/api/v1/career/analytics/dashboard', {
+      const res = await fetch('http://localhost:3000/api/v1/career/analytics/dashboard', {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       if (res.ok) {
