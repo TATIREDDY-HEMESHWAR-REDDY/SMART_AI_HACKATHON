@@ -47,6 +47,10 @@ export const SkillCatalog: React.FC = () => {
     }
   };
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRoles = user?.roles || [];
+
   return (
     <div className="p-6">
       <h2 className="text-2xl font-bold mb-4">Skill Catalog</h2>
@@ -69,8 +73,7 @@ export const SkillCatalog: React.FC = () => {
                   <h3 className="font-semibold text-lg">{skill.name}</h3>
                 </div>
                 
-                {/* TODO: Temporarily hardcoding userRoles={['STUDENT']} due to Team 1 mock auth limitation. Must replace with real auth context later */}
-                <RoleGuard allowedRoles={['STUDENT']} userRoles={['STUDENT']}>
+                <RoleGuard allowedRoles={['STUDENT']} userRoles={userRoles}>
                   <div className="mt-4 pt-4 border-t flex items-center justify-between">
                     <select 
                       id={`level-${skill.id}`} 

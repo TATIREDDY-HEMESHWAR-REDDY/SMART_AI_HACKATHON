@@ -47,8 +47,12 @@ export const CareerReadiness = () => {
     );
   }
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRoles = user?.roles || [];
+
   return (
-    <RoleGuard allowedRoles={['STUDENT']} userRoles={['STUDENT']}>
+    <RoleGuard allowedRoles={['STUDENT']} userRoles={userRoles}>
       <div className="p-6 max-w-6xl mx-auto space-y-8">
         <div>
           <h2 className="text-3xl font-bold mb-2">Career Readiness & Skill Gap</h2>

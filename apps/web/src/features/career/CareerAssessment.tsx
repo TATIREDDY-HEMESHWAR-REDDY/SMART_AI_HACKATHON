@@ -34,6 +34,11 @@ export const CareerAssessment = () => {
   const [fetchError, setFetchError] = useState('');
   const [activeTab, setActiveTab] = useState<'available' | 'results'>('available');
 
+  // Parse user roles from Team 1's auth state
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRoles = user?.roles || [];
+
   React.useEffect(() => {
     fetchDashboardData();
   }, []);
@@ -91,7 +96,7 @@ export const CareerAssessment = () => {
   if (activeSession) {
     const assessment = assessments.find(a => a.id === activeSession.assessmentId);
     return (
-      <RoleGuard allowedRoles={['STUDENT']} userRoles={['STUDENT']}>
+      <RoleGuard allowedRoles={['STUDENT']} userRoles={userRoles}>
         <div className="p-6 max-w-4xl mx-auto space-y-6">
           <button 
             onClick={cancelSession}
@@ -129,8 +134,8 @@ export const CareerAssessment = () => {
 
   return (
     <>
-      {/* TODO: Temporarily hardcoding userRoles={['STUDENT']} due to Team 1 mock auth limitation. */}
-      <RoleGuard allowedRoles={['STUDENT']} userRoles={['STUDENT']}>
+      {/* RoleGuard ensures only authorized users can access. Roles are now provided dynamically. */}
+      <RoleGuard allowedRoles={['STUDENT']} userRoles={userRoles}>
         <div className="p-6 max-w-6xl mx-auto space-y-6">
           <div className="flex justify-between items-center">
             <h2 className="text-2xl font-bold">Career Assessment</h2>

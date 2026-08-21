@@ -52,11 +52,13 @@ export const CareerProfile: React.FC = () => {
     }
   };
 
+  const userStr = localStorage.getItem('user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const userRoles = user?.roles || [];
+
   return (
     <>
-      {/* TODO: Temporarily hardcoding userRoles={['STUDENT']} due to Team 1 mock auth limitation in App.tsx. 
-          Must replace with real auth context (e.g., from global state or context) once Team 1 provides frontend auth state */}
-      <RoleGuard allowedRoles={['STUDENT']} userRoles={['STUDENT']}>
+      <RoleGuard allowedRoles={['STUDENT']} userRoles={userRoles}>
         <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">Career Profile</h2>
         
