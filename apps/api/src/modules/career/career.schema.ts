@@ -13,3 +13,9 @@ export const addStudentSkillSchema = z.object({
 });
 
 export type AddStudentSkillInput = z.infer<typeof addStudentSkillSchema>;
+
+export const startAssessmentSchema = z.object({
+  assessmentId: z.string().uuid('Invalid Assessment ID'),
+});
+
+export type StartAssessmentInput = z.infer<typeof startAssessmentSchema>;

@@ -27,6 +27,40 @@ export interface TemporaryCareerGoal {
   isActive: boolean;
 }
 
+export interface TemporaryAssessment {
+  id: string;
+  title: string;
+  type: string;
+  durationMinutes: number;
+}
+
+export interface TemporaryAssessmentResult {
+  id: string;
+  studentId: string;
+  assessmentId: string;
+  score: number;
+  strengths: string[];
+  weaknesses: string[];
+  completedAt: string;
+}
+
+export interface TemporaryAssessmentSession {
+  id: string;
+  studentId: string;
+  assessmentId: string;
+  status: 'IN_PROGRESS' | 'EVALUATING';
+  startedAt: string;
+}
+
+const mockAssessments: TemporaryAssessment[] = [
+  { id: 'cccccccc-1111-4444-8888-aaaaaaaaaaaa', title: 'Software Engineering Fundamentals', type: 'Technical', durationMinutes: 45 },
+  { id: 'cccccccc-2222-4444-8888-aaaaaaaaaaaa', title: 'General Aptitude & Reasoning', type: 'Aptitude', durationMinutes: 30 },
+  { id: 'cccccccc-3333-4444-8888-aaaaaaaaaaaa', title: 'Behavioral & Soft Skills', type: 'Behavioral', durationMinutes: 20 },
+];
+
+let mockAssessmentResults: TemporaryAssessmentResult[] = [];
+let mockAssessmentSessions: TemporaryAssessmentSession[] = [];
+
 const mockSkills: TemporarySkill[] = [
   { id: 'bbbbbbbb-1111-4444-8888-aaaaaaaaaaaa', name: 'React', category: 'Technical' },
   { id: 'bbbbbbbb-2222-4444-8888-aaaaaaaaaaaa', name: 'Node.js', category: 'Technical' },
@@ -93,5 +127,58 @@ export const careerDataLayer = {
     };
     mockStudentSkills.push(newSkill);
     return newSkill;
+  },
+
+  // ==========================================
+  // ASSESSMENT METHODS
+  // ==========================================
+  
+  getAssessments: async () => {
+    return mockAssessments;
+  },
+
+  startAssessment: async (studentId: string, assessmentId: string) => {
+    const assessment = mockAssessments.find(a => a.id === assessmentId);
+    if (!assessment) throw new Error('Assessment not found');
+
+    // Initialize an assessment session without generating a completed result
+    // Triggering Team 3 AI integration would happen here or asynchronously
+    const newSession: TemporaryAssessmentSession = {
+      id: randomUUID(),
+      studentId,
+      assessmentId,
+      status: 'IN_PROGRESS',
+      startedAt: new Date().toISOString()
+    };
+    
+    mockAssessmentSessions.push(newSession);
+    return newSession;
+  },
+
+  getAssessmentResults: async (studentId: string) => {
+    return mockAssessmentResults
+      .filter(ar => ar.studentId === studentId)
+      .map(ar => {
+        const assessment = mockAssessments.find(a => a.id === ar.assessmentId);
+        return { ...ar, assessment };
+      });
+  },
+
+  getReadinessScore: async (studentId: string) => {
+    // Mock readiness based on whether they have results
+    const results = mockAssessmentResults.filter(ar => ar.studentId === studentId);
+    if (results.length === 0) {
+      return { score: 0, status: 'Needs Assessment', lastUpdated: new Date().toISOString() };
+    }
+    const avgScore = results.reduce((acc, r) => acc + r.score, 0) / results.length;
+    let status = 'Needs Improvement';
+    if (avgScore >= 80) status = 'Ready';
+    else if (avgScore >= 60) status = 'On Track';
+    
+    return {
+      score: Math.round(avgScore),
+      status,
+      lastUpdated: results[results.length - 1].completedAt
+    };
   }
 };

@@ -158,4 +158,91 @@ export default async function careerRoutes(server: FastifyInstance) {
     }
   });
 
+
+  // ==========================================
+  // CAREER ASSESSMENT
+  // ==========================================
+
+  server.get('/assessments', { preValidation: [server.requireAuth, server.requireRole(['STUDENT', 'TPO'])] }, async (request, reply) => {
+    const assessments = await careerDataLayer.getAssessments();
+    const response: ApiSuccessResponse = {
+      success: true,
+      data: { assessments }
+    };
+    return response;
+  });
+
+  server.post('/assessments/start', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const { startAssessmentSchema } = await import('./career.schema');
+    const parsed = startAssessmentSchema.safeParse(request.body);
+    if (!parsed.success) {
+      reply.status(400).send({
+        success: false,
+        error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0].message }
+      });
+      return;
+    }
+
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) {
+      reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Student profile not found' }
+      });
+      return;
+    }
+
+    try {
+      // Initialize assessment state without faking a result
+      // Boundary for future Team 3 integration: POST /ai/career/assessment
+      const session = await careerDataLayer.startAssessment(studentId, parsed.data.assessmentId);
+      const response: ApiSuccessResponse = {
+        success: true,
+        data: { assessmentSession: session }
+      };
+      return response;
+    } catch (err: any) {
+      reply.status(400).send({
+        success: false,
+        error: { code: 'BAD_REQUEST', message: err.message }
+      });
+    }
+  });
+
+  server.get('/assessments/me/results', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) {
+      reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Student profile not found' }
+      });
+      return;
+    }
+
+    const results = await careerDataLayer.getAssessmentResults(studentId);
+    const response: ApiSuccessResponse = {
+      success: true,
+      data: { assessmentResults: results }
+    };
+    return response;
+  });
+
+  server.get('/readiness/me', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) {
+      reply.status(404).send({
+        success: false,
+        error: { code: 'NOT_FOUND', message: 'Student profile not found' }
+      });
+      return;
+    }
+
+    const readiness = await careerDataLayer.getReadinessScore(studentId);
+    const response: ApiSuccessResponse = {
+      success: true,
+      data: { readiness }
+    };
+    return response;
+  });
+
 }
