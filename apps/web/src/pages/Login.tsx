@@ -49,7 +49,7 @@ export const Login = () => {
             <GraduationCap className="text-white" size={32} />
           </div>
           <h2 className="text-center text-3xl font-extrabold text-gray-900">
-            Campus OS
+            HAYAGRIVA VIDYA KENDRAM
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
             Sign in to access your portal
