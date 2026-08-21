@@ -7,6 +7,7 @@ import { authPlugin } from './plugins/auth';
 import authRoutes from './modules/auth/auth.routes';
 import careerRoutes from './modules/career/career.routes';
 import attendanceRoutes from './modules/attendance/attendance.routes';
+import placementRoutes from './modules/placement/placement.routes';
 
 dotenv.config({ path: '../../.env' });
 
@@ -38,6 +39,7 @@ server.get('/api/v1/health', async () => {
 server.register(authRoutes, { prefix: '/api/v1/auth' });
 server.register(careerRoutes, { prefix: '/api/v1/career' });
 server.register(attendanceRoutes, { prefix: '/api/v1/attendance' });
+server.register(placementRoutes, { prefix: '/api/v1/placement' });
 
 const start = async () => {
   try {

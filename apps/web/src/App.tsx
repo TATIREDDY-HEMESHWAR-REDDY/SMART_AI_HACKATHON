@@ -7,6 +7,7 @@ import { SkillCatalog } from './features/career/SkillCatalog';
 import { CareerAssessment } from './features/career/CareerAssessment';
 import { CareerReadiness } from './features/career/CareerReadiness';
 import { CareerRoadmap } from './features/career/CareerRoadmap';
+import { PlacementDrive } from './features/placement/PlacementDrive';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 
@@ -96,14 +97,7 @@ export const App = () => {
           
           <Route path="/attendance" element={<Attendance />} />
           
-          <Route path="/placement" element={
-            <RoleGuard allowedRoles={['STUDENT', 'TPO', 'RECRUITER']} userRoles={['STUDENT']}>
-              <div className="p-6">
-                <h2 className="text-2xl font-bold mb-4">Placement Portal</h2>
-                <p>Welcome to the placement drive portal.</p>
-              </div>
-            </RoleGuard>
-          } />
+          <Route path="/placement" element={<PlacementDrive />} />
 
           <Route path="/career" element={<CareerProfile />} />
           <Route path="/skills" element={<SkillCatalog />} />
