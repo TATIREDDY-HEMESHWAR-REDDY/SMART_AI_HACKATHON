@@ -15,6 +15,7 @@ import studentRoutes from './modules/students/students.routes';
 import academicsRoutes from './modules/academics/academics.routes';
 import complaintsRoutes from './modules/complaints/complaints.routes';
 import notificationsRoutes from './modules/notifications/notifications.routes';
+import alumniRoutes from './modules/alumni/alumni.routes';
 
 dotenv.config({ path: '../../.env' });
 
@@ -54,6 +55,7 @@ server.register(studentRoutes, { prefix: '/api/v1/students' });
 server.register(academicsRoutes, { prefix: '/api/v1/academics' });
 server.register(complaintsRoutes, { prefix: '/api/v1/complaints' });
 server.register(notificationsRoutes, { prefix: '/api/v1/notifications' });
+server.register(alumniRoutes, { prefix: '/api/v1/alumni' });
 
 const start = async () => {
   try {

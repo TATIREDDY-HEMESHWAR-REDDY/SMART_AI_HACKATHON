@@ -8,6 +8,7 @@ import { CareerAssessment } from './features/career/CareerAssessment';
 import { CareerReadiness } from './features/career/CareerReadiness';
 import { CareerRoadmap } from './features/career/CareerRoadmap';
 import { PlacementDrive } from './features/placement/PlacementDrive';
+import { AlumniDirectory } from './features/alumni/AlumniDirectory';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 import { Institution } from './pages/Institution';
@@ -28,6 +29,7 @@ const navItems: NavItem[] = [
   { label: 'Helpdesk', href: '/helpdesk', icon: FileText },
   { label: 'Broadcast', href: '/notifications/manage', icon: Bell, roles: ['COLLEGE_ADMIN', 'ADMIN'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
+  { label: 'Alumni Network', href: '/alumni', icon: FileText, roles: ['STUDENT', 'TPO', 'ALUMNI', 'FACULTY'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
   { label: 'Safety SOS', href: '/safety', icon: ShieldAlert },
 ];
@@ -142,6 +144,8 @@ export const App = () => {
           <Route path="/readiness" element={<CareerReadiness />} />
           <Route path="/roadmap" element={<CareerRoadmap />} />
           <Route path="/assessments" element={<CareerAssessment />} />
+          
+          <Route path="/alumni" element={<AlumniDirectory />} />
 
           <Route path="/unauthorized" element={
             <div className="p-6 text-center">
