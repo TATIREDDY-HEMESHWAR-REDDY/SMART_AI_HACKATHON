@@ -1,6 +1,6 @@
 import fp from 'fastify-plugin';
 import jwt from '@fastify/jwt';
-import { FastifyRequest, FastifyReply } from 'fastify';
+import { FastifyRequest, FastifyReply, FastifyInstance } from 'fastify';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -16,7 +16,7 @@ declare module '@fastify/jwt' {
   }
 }
 
-export const authPlugin = fp(async (server, opts) => {
+export const authPlugin = fp(async (server: FastifyInstance, opts: any) => {
   server.register(jwt, {
     secret: process.env.AUTH_SECRET || 'super-secret-fallback-key-12345',
   });
