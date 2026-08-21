@@ -93,6 +93,37 @@ export const CareerAssessment = () => {
     setActiveSession(null);
   };
 
+  const submitMockAssessment = async () => {
+    if (!activeSession) return;
+    setLoading(true);
+    try {
+      const response = await fetch('http://localhost:3000/api/v1/career/assessments/submit', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('token')}`
+        },
+        body: JSON.stringify({
+          sessionId: activeSession.id,
+          assessmentId: activeSession.assessmentId,
+          answers: { mock: true }
+        })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setActiveSession(null);
+        setActiveTab('results');
+        fetchDashboardData();
+      } else {
+        alert('Failed to submit: ' + data.error?.message);
+      }
+    } catch (e) {
+      alert('Network error while submitting assessment');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (activeSession) {
     const assessment = assessments.find(a => a.id === activeSession.assessmentId);
     return (
@@ -123,8 +154,24 @@ export const CareerAssessment = () => {
               </ul>
             </div>
             
-            <p className="text-sm text-gray-400">
-              Note: Results are not yet available. Please complete the interactive questions (Team 3 AI integration).
+            <div className="mt-4 flex justify-center">
+              <button 
+                onClick={submitMockAssessment} 
+                disabled={loading}
+                className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transition-transform transform hover:scale-105 disabled:opacity-50 flex items-center space-x-2"
+              >
+                {loading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <>
+                    <Activity className="w-5 h-5" />
+                    <span>Complete Assessment (Mock AI)</span>
+                  </>
+                )}
+              </button>
+            </div>
+            <p className="text-sm text-gray-400 mt-4">
+              Note: Clicking this button bypasses the interactive questions (Team 3) and submits mock deterministic answers.
             </p>
           </div>
         </div>

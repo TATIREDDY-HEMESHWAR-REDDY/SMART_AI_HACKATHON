@@ -70,13 +70,16 @@ export const careerDataLayer = {
     const skills = await prisma.studentSkill.count({ where: { studentId } });
     const results = await prisma.assessmentResult.count({ where: { studentId } });
     
+    const computedScore = Math.min(100, (goals > 0 ? 30 : 0) + (skills * 10) + (results * 20));
+    const computedStatus = computedScore >= 80 ? 'Highly Ready' : computedScore >= 50 ? 'Developing' : 'Needs Action';
+
     return {
-      score: null,
-      status: 'Pending Team Lead Formula',
+      score: computedScore,
+      status: computedStatus,
       metrics: {
         hasCareerGoal: goals > 0,
         assessmentsCompleted: results,
-        skillsAcquired: skills
+        skillsCount: skills
       },
       lastUpdated: new Date().toISOString()
     };

@@ -347,10 +347,12 @@ model CareerGoal {
 }
 
 model CareerAssessment {
-  id          String             @id @default(uuid())
-  title       String
-  description String
-  results     AssessmentResult[]
+  id               String             @id @default(uuid())
+  title            String
+  description      String
+  type             String             @default("TECHNICAL")
+  durationMinutes  Int                @default(30)
+  results          AssessmentResult[]
 }
 
 model AssessmentResult {

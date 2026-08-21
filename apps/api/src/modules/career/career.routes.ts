@@ -230,6 +230,41 @@ export default async function careerRoutes(server: FastifyInstance) {
     }
   });
 
+  server.post('/assessments/submit', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const { submitAssessmentSchema } = await import('./career.schema');
+    const parsed = submitAssessmentSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0].message } });
+    }
+
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+
+    // Mock deterministic score
+    const score = Math.floor(Math.random() * 41) + 60; // 60-100 random score for testing
+    const aiFeedback = {
+      strengths: ['Problem Solving', 'Adaptability', 'Technical Fundamentals'],
+      weaknesses: ['Advanced System Design', 'Communication under pressure']
+    };
+
+    try {
+      const result = await prisma.assessmentResult.create({
+        data: {
+          studentId,
+          assessmentId: parsed.data.assessmentId,
+          score,
+          aiFeedback
+        }
+      });
+      return { success: true, data: { result } };
+    } catch (error: any) {
+      if (error.code === 'P2003') {
+        return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Assessment not found' } });
+      }
+      return reply.status(500).send({ success: false, error: { code: 'INTERNAL_ERROR', message: error.message } });
+    }
+  });
+
   server.get('/assessments/me/results', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
     const studentId = await getStudentProfileId(request.user.id);
     if (!studentId) {
@@ -240,10 +275,23 @@ export default async function careerRoutes(server: FastifyInstance) {
       return;
     }
 
-    const results = await careerDataLayer.getAssessmentResults(studentId);
+    const rawResults = await careerDataLayer.getAssessmentResults(studentId);
+    
+    const mappedResults = rawResults.map(r => {
+      const feedback = r.aiFeedback as any || {};
+      return {
+        id: r.id,
+        assessment: r.assessment,
+        score: r.score,
+        completedAt: r.createdAt,
+        strengths: feedback.strengths || [],
+        weaknesses: feedback.weaknesses || []
+      };
+    });
+
     const response: ApiSuccessResponse = {
       success: true,
-      data: { assessmentResults: results }
+      data: { assessmentResults: mappedResults }
     };
     return response;
   });

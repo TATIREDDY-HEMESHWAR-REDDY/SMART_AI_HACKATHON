@@ -23,3 +23,11 @@ export const startAssessmentSchema = z.object({
 });
 
 export type StartAssessmentInput = z.infer<typeof startAssessmentSchema>;
+
+export const submitAssessmentSchema = z.object({
+  sessionId: z.string(),
+  assessmentId: z.string().uuid(),
+  answers: z.any().optional(), // In a real app, this would be structured based on the test
+});
+
+export type SubmitAssessmentInput = z.infer<typeof submitAssessmentSchema>;
