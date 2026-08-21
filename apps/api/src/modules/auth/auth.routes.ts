@@ -1,13 +1,58 @@
 import { FastifyInstance } from 'fastify';
 import bcrypt from 'bcrypt';
 import { PrismaClient } from '@prisma/client';
-import { loginSchema } from './auth.schema';
+import { loginSchema, registerSchema } from './auth.schema';
 import { ApiSuccessResponse } from '@campus-os/types';
 
 const prisma = new PrismaClient();
 
 export default async function authRoutes(server: FastifyInstance) {
   
+  server.post('/register', async (request, reply) => {
+    const parsed = registerSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0].message } });
+    }
+
+    const { email, password, firstName, lastName, enrollmentNumber } = parsed.data;
+
+    // Check if user exists
+    const existing = await prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      return reply.status(400).send({ success: false, error: { code: 'BAD_REQUEST', message: 'Email already exists' } });
+    }
+
+    // Get Student role and default Institution (HVK-MAIN)
+    const studentRole = await prisma.role.findUnique({ where: { name: 'STUDENT' } });
+    const institution = await prisma.institution.findUnique({ where: { code: 'HVK-MAIN' } });
+    const program = await prisma.program.findFirst();
+
+    if (!studentRole || !institution || !program) {
+      return reply.status(500).send({ success: false, error: { code: 'INTERNAL_ERROR', message: 'System not seeded properly for registration' } });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+
+    const user = await prisma.user.create({
+      data: {
+        email,
+        passwordHash,
+        institutionId: institution.id,
+        roles: { create: { roleId: studentRole.id } },
+        studentProfile: {
+          create: {
+            firstName,
+            lastName,
+            enrollmentNumber,
+            programId: program.id
+          }
+        }
+      }
+    });
+
+    return { success: true, message: 'Registration successful. You can now log in.' };
+  });
+
   server.post('/login', async (request, reply) => {
     // Validate request body
     const parsed = loginSchema.safeParse(request.body);
