@@ -1,12 +1,16 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
-import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck } from 'lucide-react';
+import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus } from 'lucide-react';
+import { CareerProfile } from './features/career/CareerProfile';
+import { SkillCatalog } from './features/career/SkillCatalog';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
   { label: 'Attendance', href: '/attendance', icon: Calendar, roles: ['STUDENT', 'FACULTY', 'PARENT'] },
   { label: 'Academics', href: '/academics', icon: GraduationCap, roles: ['STUDENT', 'FACULTY'] },
+  { label: 'Career Profile', href: '/career', icon: Compass, roles: ['STUDENT'] },
+  { label: 'Skill Catalog', href: '/skills', icon: ListPlus, roles: ['STUDENT'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
   { label: 'Safety SOS', href: '/safety', icon: ShieldAlert },
@@ -63,6 +67,9 @@ export const App = () => {
               </div>
             </RoleGuard>
           } />
+
+          <Route path="/career" element={<CareerProfile />} />
+          <Route path="/skills" element={<SkillCatalog />} />
 
           {/* Add more placeholder routes as needed */}
           <Route path="*" element={<div className="p-6 text-gray-500">Feature coming soon...</div>} />

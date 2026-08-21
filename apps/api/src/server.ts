@@ -5,7 +5,7 @@ import { ApiErrorResponse } from '@campus-os/types';
 
 import { authPlugin } from './plugins/auth';
 import authRoutes from './modules/auth/auth.routes';
-
+import careerRoutes from './modules/career/career.routes';
 dotenv.config({ path: '../../.env' });
 
 const server = Fastify({ logger: true });
@@ -34,6 +34,7 @@ server.get('/api/v1/health', async () => {
 
 // Register Modules
 server.register(authRoutes, { prefix: '/api/v1/auth' });
+server.register(careerRoutes, { prefix: '/api/v1/career' });
 
 const start = async () => {
   try {
