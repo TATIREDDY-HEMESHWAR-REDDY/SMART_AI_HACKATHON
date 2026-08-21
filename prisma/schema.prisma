@@ -110,6 +110,14 @@ model StudentProfile {
   currentSemester  Int      @default(1)
   cgpa             Float    @default(0.0)
   
+  phone            String?
+  skills           String[] @default([])
+  certifications   String[] @default([])
+  projects         String[] @default([])
+  internships      String[] @default([])
+  profilePhotoUrl  String?
+  careerGoal       String?
+  
   enrollments      CourseEnrollment[]
   attendance       AttendanceRecord[]
 
