@@ -6,7 +6,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // GET /api/v1/alumni/directory
   // Roles: STUDENT, TPO, ALUMNI, FACULTY
   server.get('/directory', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['STUDENT', 'TPO', 'ALUMNI', 'FACULTY'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['STUDENT', 'TPO', 'ALUMNI', 'FACULTY'])]
   }, async (request, reply) => {
     const directory = alumniData.getDirectory();
     return reply.send({ success: true, data: directory });
@@ -15,7 +15,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // GET /api/v1/alumni/profile/me
   // Roles: ALUMNI
   server.get('/profile/me', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['ALUMNI'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['ALUMNI'])]
   }, async (request, reply) => {
     const user = request.user as any;
     const profile = alumniData.getProfileByUserId(user.id);
@@ -30,7 +30,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // PUT /api/v1/alumni/profile/me
   // Roles: ALUMNI
   server.put('/profile/me', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['ALUMNI'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['ALUMNI'])]
   }, async (request, reply) => {
     const user = request.user as any;
     const parsedBody = alumniProfileSchema.safeParse(request.body);
@@ -49,7 +49,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // POST /api/v1/alumni/mentorship/request
   // Roles: STUDENT
   server.post('/mentorship/request', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['STUDENT'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['STUDENT'])]
   }, async (request, reply) => {
     const user = request.user as any;
     const parsedBody = mentorshipRequestSchema.safeParse(request.body);
@@ -63,7 +63,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // PATCH /api/v1/alumni/mentorship/requests/:id
   // Roles: ALUMNI
   server.patch('/mentorship/requests/:id', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['ALUMNI'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['ALUMNI'])]
   }, async (request, reply) => {
     const { id } = request.params as { id: string };
     const parsedBody = mentorshipRespondSchema.safeParse(request.body);
@@ -80,7 +80,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // POST /api/v1/alumni/mentorship/sessions
   // Roles: ALUMNI
   server.post('/mentorship/sessions', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['ALUMNI'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['ALUMNI'])]
   }, async (request, reply) => {
     const parsedBody = mentorshipSessionSchema.safeParse(request.body);
     if (!parsedBody.success) {
@@ -93,7 +93,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // GET /api/v1/alumni/events
   // Roles: STUDENT, ALUMNI, TPO, FACULTY
   server.get('/events', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['STUDENT', 'ALUMNI', 'TPO', 'FACULTY'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['STUDENT', 'ALUMNI', 'TPO', 'FACULTY'])]
   }, async (request, reply) => {
     const events = alumniData.getEvents();
     return reply.send({ success: true, data: events });
@@ -102,7 +102,7 @@ export default async function alumniRoutes(server: FastifyInstance) {
   // POST /api/v1/alumni/events
   // Roles: ALUMNI, TPO
   server.post('/events', {
-    preValidation: [(server as any).authenticate, (server as any).requireRole(['ALUMNI', 'TPO'])]
+    preValidation: [(server as any).requireAuth, (server as any).requireRole(['ALUMNI', 'TPO'])]
   }, async (request, reply) => {
     const user = request.user as any;
     const parsedBody = alumniEventSchema.safeParse(request.body);
