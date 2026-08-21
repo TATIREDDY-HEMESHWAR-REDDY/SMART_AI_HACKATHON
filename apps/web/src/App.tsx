@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
-import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Building2 } from 'lucide-react';
+import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Building2, Bell } from 'lucide-react';
 import { Login } from './pages/Login';
 import { Attendance } from './pages/Attendance';
 import { Institution } from './pages/Institution';
 import { Profile } from './pages/Profile';
 import { Academics } from './pages/Academics';
 import { Helpdesk } from './pages/Helpdesk';
+import { NotificationsManage } from './pages/NotificationsManage';
 
 const navItems: NavItem[] = [
   { label: 'Dashboard', href: '/dashboard', icon: BookOpen },
@@ -15,6 +16,7 @@ const navItems: NavItem[] = [
   { label: 'Attendance', href: '/attendance', icon: Calendar, roles: ['STUDENT', 'FACULTY', 'PARENT'] },
   { label: 'Academics', href: '/academics', icon: GraduationCap, roles: ['STUDENT', 'FACULTY'] },
   { label: 'Helpdesk', href: '/helpdesk', icon: FileText },
+  { label: 'Broadcast', href: '/notifications/manage', icon: Bell, roles: ['COLLEGE_ADMIN', 'ADMIN'] },
   { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
   { label: 'Safety SOS', href: '/safety', icon: ShieldAlert },
@@ -110,6 +112,12 @@ export const App = () => {
           <Route path="/helpdesk" element={
             <RoleGuard allowedRoles={['STUDENT', 'FACULTY', 'COLLEGE_ADMIN', 'ADMIN', 'MAINTENANCE']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
               <Helpdesk />
+            </RoleGuard>
+          } />
+
+          <Route path="/notifications/manage" element={
+            <RoleGuard allowedRoles={['COLLEGE_ADMIN', 'ADMIN']} userRoles={JSON.parse(localStorage.getItem('user') || '{}').roles || []}>
+              <NotificationsManage />
             </RoleGuard>
           } />
           
