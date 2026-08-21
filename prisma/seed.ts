@@ -177,6 +177,16 @@ async function main() {
     }
   });
 
+  // 9. Seed Dummy Notification
+  await prisma.notification.create({
+    data: {
+      title: 'Welcome to HVK Campus OS!',
+      message: 'Please update your profile and check your timetable for the upcoming semester.',
+      type: 'SYSTEM',
+      userId: studentUser.id
+    }
+  });
+
   console.log('✅ Seeding complete!');
   console.log('Login credentials:');
   console.log('  STUDENT: student@hvk.edu / password123');
