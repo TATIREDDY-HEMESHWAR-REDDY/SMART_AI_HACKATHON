@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar, CheckCircle, XCircle, Clock, Users, ArrowLeft } from 'lucide-react';
+import { Calendar, CheckCircle, XCircle, Clock, Users, ArrowLeft, AlertTriangle, Fingerprint } from 'lucide-react';
 
 export const Attendance = () => {
   const [user, setUser] = useState<any>(null);
@@ -12,26 +12,30 @@ export const Attendance = () => {
   const [roster, setRoster] = useState<any[]>([]);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) setUser(JSON.parse(storedUser));
-    
-    fetchCourses();
-  }, []);
-
-  const fetchCourses = async () => {
+  const fetchData = async (roles: string[], userId: string) => {
     try {
-      const res = await fetch('http://localhost:3000/api/v1/attendance/courses', {
-        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
-      });
-      const data = await res.json();
-      if (data.success) setCourses(data.data);
+      const headers = { Authorization: `Bearer ${localStorage.getItem('token')}` };
+      if (roles.includes('STUDENT')) {
+        const res = await fetch(`http://localhost:3000/api/v1/attendance/student/${userId}`, { headers });
+        const data = await res.json();
+        if (data.success) setCourses(data.data);
+      } else {
+        const res = await fetch('http://localhost:3000/api/v1/attendance/courses', { headers });
+        const data = await res.json();
+        if (data.success) setCourses(data.data);
+      }
     } catch (err) {
-      console.error('Error fetching courses', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const storedUser = JSON.parse(localStorage.getItem('user') || '{}');
+    setUser(storedUser);
+    fetchData(storedUser.roles || [], storedUser.id);
+  }, []);
 
   const fetchRoster = async (sessionId: string) => {
     try {
@@ -192,38 +196,69 @@ export const Attendance = () => {
     );
   }
 
-  // --- STUDENT VIEW (READ ONLY) ---
+  // --- STUDENT VIEW ---
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-gray-900">My Attendance</h2>
-        <p className="text-sm text-gray-500">View your attendance across enrolled courses</p>
+        <h2 className="text-2xl font-bold text-gray-900">My Attendance Overview</h2>
+        <p className="text-sm text-gray-500">Track your attendance and handle biometric verification</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {courses.length === 0 && <p className="text-gray-500">No attendance data found.</p>}
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {courses.map(course => (
-          <div key={course.id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-            <div className="px-6 py-4 bg-gray-50/50 border-b border-gray-100 flex justify-between items-center">
+          <div key={course.courseId} className={`bg-white rounded-xl shadow-sm border ${course.lowAttendanceAlert ? 'border-red-300' : 'border-gray-100'} p-6`}>
+            <div className="flex justify-between items-start mb-4">
               <div>
-                <h3 className="font-bold text-gray-900">{course.name}</h3>
-                <p className="text-sm text-gray-500">{course.code}</p>
+                <h3 className="font-bold text-lg text-gray-900">{course.courseName}</h3>
+                <p className="text-sm text-gray-500">{course.courseCode}</p>
+              </div>
+              <div className={`px-3 py-1 rounded-full text-sm font-bold ${course.percentage >= 75 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                {course.percentage.toFixed(1)}%
               </div>
             </div>
-            <div className="divide-y divide-gray-100">
-              {course.sessions?.map((session: any) => (
-                <div key={session.id} className="px-6 py-3 flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">{new Date(session.date).toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-500">{session.topic}</p>
-                  </div>
-                  <span className="px-3 py-1 bg-gray-100 text-gray-600 rounded-full text-xs font-medium">
-                    Pending / Synced
-                  </span>
-                </div>
-              ))}
-              {!course.sessions?.length && (
-                <div className="px-6 py-4 text-sm text-gray-500">No sessions recorded.</div>
-              )}
+
+            <div className="flex justify-between text-sm text-gray-600 mb-6">
+              <span>Present: {course.presentCount}</span>
+              <span>Total Sessions: {course.totalSessions}</span>
+            </div>
+
+            {course.lowAttendanceAlert && (
+              <div className="mb-4 p-3 bg-red-50 text-red-700 rounded-lg text-xs flex items-start gap-2">
+                <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+                <p>Warning: Your attendance has dropped below 75%. Please contact your faculty advisor immediately.</p>
+              </div>
+            )}
+
+            <div className="pt-4 border-t border-gray-100">
+              <h4 className="text-sm font-semibold text-gray-700 mb-3">Today's Session</h4>
+              <div className="flex gap-2">
+                <button 
+                  onClick={async () => {
+                    const sessionId = prompt('Enter today\'s Session ID to verify biometric attendance:');
+                    if (!sessionId) return;
+                    try {
+                      const res = await fetch(`http://localhost:3000/api/v1/attendance/sessions/${sessionId}/biometric-mock`, {
+                        method: 'POST',
+                        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+                      });
+                      const data = await res.json();
+                      if (data.success) {
+                        alert(data.message);
+                        fetchData(user?.roles || [], user?.id || ''); // reload stats
+                      } else {
+                        alert(`Verification failed: ${data.message}`);
+                      }
+                    } catch(e) {
+                      alert('Error connecting to biometric server');
+                    }
+                  }}
+                  className="flex-1 bg-gray-900 hover:bg-black text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex justify-center items-center gap-2"
+                >
+                  <Fingerprint size={18} /> Verify Biometric (Mock)
+                </button>
+              </div>
             </div>
           </div>
         ))}
