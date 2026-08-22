@@ -210,4 +210,30 @@ export default async function placementRoutes(server: FastifyInstance) {
       return { success: true, data: { application: updated } };
     }
   });
+  server.post('/recruiters/onboard', {
+    preHandler: [server.requireRole(['RECRUITER'])],
+    handler: async (request: any, reply) => {
+      const { companyId, designation } = request.body;
+      if (!companyId || !designation) return reply.status(400).send({ success: false, message: 'Missing fields' });
+      const recruiter = await PlacementData.onboardRecruiter(request.user.id, { companyId, designation });
+      return { success: true, data: { recruiter } };
+    }
+  });
+
+  server.get('/admin/pending-approvals', {
+    preHandler: [server.requireRole(['TPO'])],
+    handler: async (request: any, reply) => {
+      const pending = await PlacementData.getPendingApprovals();
+      return { success: true, data: pending };
+    }
+  });
+
+  server.patch('/recruiters/:id/verify', {
+    preHandler: [server.requireRole(['TPO'])],
+    handler: async (request: any, reply) => {
+      const { id } = request.params;
+      const recruiter = await PlacementData.verifyRecruiter(id);
+      return { success: true, data: { recruiter } };
+    }
+  });
 }

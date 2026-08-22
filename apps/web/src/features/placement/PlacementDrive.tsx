@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { RoleGuard } from '@campus-os/ui';
-import { Building, Briefcase, FileSignature, Save, Plus, CheckCircle, XCircle } from 'lucide-react';
+import { Building, Briefcase, FileSignature, Save, Plus, CheckCircle, XCircle, ShieldCheck } from 'lucide-react';
 
 export const PlacementDrive = () => {
   const [loading, setLoading] = useState(false);
@@ -25,12 +25,14 @@ export const PlacementDrive = () => {
   const [selectedResume, setSelectedResume] = useState('');
   const [eligibilityResult, setEligibilityResult] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
+  const [pendingApprovals, setPendingApprovals] = useState<{companies: any[], recruiters: any[]}>({ companies: [], recruiters: [] });
 
   // Parse user roles
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const userRoles = user?.roles || [];
   const isStudent = userRoles.includes('STUDENT');
+  const isTPO = userRoles.includes('TPO');
 
   const fetchData = async () => {
     try {
@@ -43,6 +45,9 @@ export const PlacementDrive = () => {
       if (isStudent) {
          reqs.push(fetch('http://localhost:3000/api/v1/placement/applications/me', { headers }));
          reqs.push(fetch('http://localhost:3000/api/v1/career/resume/me', { headers }));
+      }
+      if (isTPO) {
+         reqs.push(fetch('http://localhost:3000/api/v1/placement/admin/pending-approvals', { headers }));
       }
       const responses = await Promise.all(reqs);
       
@@ -67,6 +72,15 @@ export const PlacementDrive = () => {
            else if (resData.data.resumes?.length > 0) setSelectedResume(resData.data.resumes[0].id);
          }
       }
+      
+      if (isTPO) {
+         // It might be response 3 if not student, or 5 if somehow both
+         const targetRes = isStudent ? responses[5] : responses[3];
+         if (targetRes) {
+            const approvalData = await targetRes.json();
+            if (approvalData.success) setPendingApprovals(approvalData.data);
+         }
+      }
     } catch (e) {
       console.error(e);
     }
@@ -74,7 +88,7 @@ export const PlacementDrive = () => {
 
   React.useEffect(() => {
     fetchData();
-  }, [isStudent]);
+  }, [isStudent, isTPO]);
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,6 +111,33 @@ export const PlacementDrive = () => {
       setLoading(false);
       setTimeout(() => { setSuccessMsg(''); setErrorMsg(''); }, 3000);
     }
+  };
+
+  const handleVerifyCompany = async (id: string, status: string = 'VERIFIED') => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/v1/placement/companies/${id}/verify`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        setSuccessMsg('Company verification updated.');
+        fetchData();
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  const handleVerifyRecruiter = async (id: string) => {
+    try {
+      const res = await fetch(`http://localhost:3000/api/v1/placement/recruiters/${id}/verify`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      if (res.ok) {
+        setSuccessMsg('Recruiter verified successfully.');
+        fetchData();
+      }
+    } catch(e) { console.error(e); }
   };
 
   const handleCreateDrive = async (e: React.FormEvent) => {
@@ -373,13 +414,44 @@ export const PlacementDrive = () => {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              
-              {/* Create Company */}
+            <div className="mb-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Approvals (Module S integration for TPO) */}
+              <div className="bg-yellow-50 p-6 border border-yellow-200 rounded-xl shadow-sm">
+                <div className="flex items-center space-x-2 mb-4 text-yellow-800">
+                  <ShieldCheck className="w-5 h-5" />
+                  <h3 className="text-xl font-bold">Pending Approvals (Module S)</h3>
+                </div>
+                
+                <div className="space-y-4">
+                  <div>
+                    <h4 className="font-semibold text-yellow-800 text-sm border-b border-yellow-200 pb-1 mb-2">Companies ({pendingApprovals.companies.length})</h4>
+                    {pendingApprovals.companies.length === 0 && <p className="text-xs text-yellow-700 italic">No companies pending.</p>}
+                    {pendingApprovals.companies.map(c => (
+                      <div key={c.id} className="flex justify-between items-center text-sm bg-white p-2 rounded border border-yellow-200 mb-2">
+                        <span><strong>{c.name}</strong> <span className="text-gray-500 text-xs">({c.industry})</span></span>
+                        <button onClick={() => handleVerifyCompany(c.id)} className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-green-700">Approve</button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div>
+                    <h4 className="font-semibold text-yellow-800 text-sm border-b border-yellow-200 pb-1 mb-2">Recruiters ({pendingApprovals.recruiters.length})</h4>
+                    {pendingApprovals.recruiters.length === 0 && <p className="text-xs text-yellow-700 italic">No recruiters pending.</p>}
+                    {pendingApprovals.recruiters.map(r => (
+                      <div key={r.id} className="flex justify-between items-center text-sm bg-white p-2 rounded border border-yellow-200 mb-2">
+                        <span><strong>{r.user?.name}</strong> <span className="text-gray-500 text-xs">for {r.company?.name}</span></span>
+                        <button onClick={() => handleVerifyRecruiter(r.id)} className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-green-700">Approve</button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Create Company (Direct override) */}
               <div className="bg-white p-6 border rounded-xl shadow-sm">
                 <div className="flex items-center space-x-2 mb-4 text-indigo-600">
                   <Building className="w-5 h-5" />
-                  <h3 className="text-xl font-semibold text-gray-800">1. Create Company</h3>
+                  <h3 className="text-xl font-semibold text-gray-800">1. Create Company Directly</h3>
                 </div>
                 <form onSubmit={handleCreateCompany} className="space-y-4">
                   <div>
@@ -399,7 +471,9 @@ export const PlacementDrive = () => {
                   </button>
                 </form>
               </div>
+            </div>
 
+            <div className="grid grid-cols-1 gap-8">
               {/* Create Drive */}
               <div className="bg-white p-6 border rounded-xl shadow-sm">
                 <div className="flex items-center space-x-2 mb-4 text-indigo-600">
@@ -411,7 +485,7 @@ export const PlacementDrive = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-1">Select Company</label>
                     <select required className="w-full border rounded-lg p-2" value={driveForm.companyId} onChange={e => setDriveForm({...driveForm, companyId: e.target.value})}>
                       <option value="">-- Select Company --</option>
-                      {companies.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                      {companies.filter(c => c.verificationStatus === 'VERIFIED').map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
                   <div>
@@ -513,4 +587,3 @@ export const PlacementDrive = () => {
     </RoleGuard>
   );
 };
-

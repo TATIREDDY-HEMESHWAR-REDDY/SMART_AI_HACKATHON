@@ -1,4 +1,3 @@
-
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
@@ -9,7 +8,7 @@ export const PlacementData = {
         name: data.name,
         website: data.website,
         industry: data.industry,
-        verificationStatus: 'REGISTERED'
+        verificationStatus: 'PENDING_VERIFICATION' // Changed for Module S
       }
     });
   },
@@ -22,22 +21,39 @@ export const PlacementData = {
   },
 
   getRecruiterMe: async (userId: string) => {
-    let recruiter = await prisma.recruiter.findUnique({ where: { userId } });
-    if (!recruiter) {
-      // Find a default company or fail gracefully
-      const defaultCompany = await prisma.company.findFirst();
-      if (!defaultCompany) throw new Error('No company found to assign recruiter');
-      
-      recruiter = await prisma.recruiter.create({
-        data: {
-          userId,
-          companyId: defaultCompany.id,
-          designation: 'Recruiter',
-          isVerified: false
-        }
-      });
-    }
-    return recruiter;
+    return prisma.recruiter.findUnique({ 
+      where: { userId },
+      include: { company: true }
+    });
+  },
+
+  onboardRecruiter: async (userId: string, data: { companyId: string, designation: string }) => {
+    return prisma.recruiter.create({
+      data: {
+        userId,
+        companyId: data.companyId,
+        designation: data.designation,
+        isVerified: false
+      }
+    });
+  },
+
+  getPendingApprovals: async () => {
+    const companies = await prisma.company.findMany({
+      where: { verificationStatus: 'PENDING_VERIFICATION' }
+    });
+    const recruiters = await prisma.recruiter.findMany({
+      where: { isVerified: false },
+      include: { company: true, user: true }
+    });
+    return { companies, recruiters };
+  },
+
+  verifyRecruiter: async (id: string) => {
+    return prisma.recruiter.update({
+      where: { id },
+      data: { isVerified: true }
+    });
   },
 
   createDrive: async (data: any) => {
@@ -138,4 +154,3 @@ export const PlacementData = {
     return { isEligible, criteria };
   }
 };
-
