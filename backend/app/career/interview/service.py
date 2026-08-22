@@ -4,12 +4,16 @@ from datetime import datetime
 
 from .models import InterviewSession, InterviewQuestion, InterviewResponse
 from .schemas import CreateInterview, InterviewResponseSubmit
-from .fallback_questions import get_fallback_questions
+from .ai_service import InterviewAIService
+from app.career.profile.service import CareerProfileService
+from app.career.resume.service import ResumeService
+from app.career.readiness.service import CareerReadinessService
+from app.career.progress.models import CareerProgress
 
 class InterviewService:
     
     @staticmethod
-    def create_session(db: Session, student_id: str, setup: CreateInterview) -> InterviewSession:
+    async def create_session(db: Session, student_id: str, setup: CreateInterview) -> InterviewSession:
         session = InterviewSession(
             student_id=student_id,
             target_role=setup.target_role,
@@ -22,8 +26,21 @@ class InterviewService:
         db.commit()
         db.refresh(session)
         
-        # In Phase 7A we ONLY use fallback questions
-        generated = get_fallback_questions(setup.interview_type, setup.num_questions)
+        # Gather context
+        profile = CareerProfileService.get_profile(db, student_id)
+        resumes = ResumeService.get_resumes(db, student_id)
+        
+        context = {
+            "target_role": setup.target_role,
+            "skills": [s.name for s in profile.skills] if profile else [],
+            "projects": []
+        }
+        if resumes:
+            best_resume = resumes[0]
+            context["projects"] = [p.name for p in best_resume.projects]
+            
+        # Generate Questions using AI (falls back if AI fails)
+        generated = await InterviewAIService.generate_questions(context, setup.num_questions, setup.interview_type)
         
         for i, q_data in enumerate(generated, 1):
             question = InterviewQuestion(
@@ -58,7 +75,7 @@ class InterviewService:
         return session.questions
 
     @staticmethod
-    def submit_answer(db: Session, student_id: str, session_id: int, question_id: int, payload: InterviewResponseSubmit) -> InterviewResponse:
+    async def submit_answer(db: Session, student_id: str, session_id: int, question_id: int, payload: InterviewResponseSubmit) -> InterviewResponse:
         session = InterviewService.get_session(db, student_id, session_id)
         if not session or session.status != "IN_PROGRESS":
             raise ValueError("Session not found or not active")
@@ -80,12 +97,26 @@ class InterviewService:
         db.commit()
         db.refresh(response_obj)
         
-        # Phase 7A: No AI evaluation yet, so score and feedback remain NULL
+        # Async AI evaluation
+        evaluation = await InterviewAIService.evaluate_answer(
+            question=question.question,
+            category=question.category,
+            expected_topics=question.expected_topics or [],
+            answer=payload.answer,
+            target_role=session.target_role or "General"
+        )
         
+        response_obj.score = evaluation.get("score")
+        response_obj.feedback = evaluation.get("feedback")
+        response_obj.strengths = evaluation.get("strengths")
+        response_obj.weaknesses = evaluation.get("weaknesses")
+        
+        db.commit()
+        db.refresh(response_obj)
         return response_obj
 
     @staticmethod
-    def complete_session(db: Session, student_id: str, session_id: int) -> InterviewSession:
+    async def complete_session(db: Session, student_id: str, session_id: int) -> InterviewSession:
         session = InterviewService.get_session(db, student_id, session_id)
         if not session or session.status != "IN_PROGRESS":
             raise ValueError("Session not found or not active")
@@ -93,14 +124,99 @@ class InterviewService:
         session.status = "COMPLETED"
         session.completed_at = datetime.utcnow()
         
+        total_score = 0
+        valid_responses = 0
         duration = 0
+        responses_data = []
+        
         for q in session.questions:
             if q.response:
                 duration += q.response.time_spent_seconds
+                if q.response.score is not None:
+                    total_score += q.response.score
+                    valid_responses += 1
+                responses_data.append({
+                    "question": q.question,
+                    "answer": q.response.answer,
+                    "score": q.response.score,
+                    "feedback": q.response.feedback
+                })
                 
         session.duration_seconds = duration
-        
+        if valid_responses > 0:
+            session.overall_score = total_score / valid_responses
+        else:
+            session.overall_score = None
+            
         db.commit()
-        db.refresh(session)
+        
+        if valid_responses > 0:
+            summary = await InterviewAIService.generate_summary(session.target_role or "General", session.interview_type, responses_data)
+            session.ai_summary = summary
+            db.commit()
+            db.refresh(session)
+            
+            # Update Readiness and Progress
+            InterviewService.update_readiness(db, student_id)
+            progress = db.query(CareerProgress).filter(CareerProgress.student_id == student_id, CareerProgress.module == "INTERVIEW").first()
+            if not progress:
+                progress = CareerProgress(student_id=student_id, module="INTERVIEW", total_items=1)
+                db.add(progress)
+            progress.completed_items = (progress.completed_items or 0) + 1
+            progress.status = "COMPLETED"
+            progress.last_activity = datetime.utcnow()
+            db.commit()
         
         return session
+
+    @staticmethod
+    def get_analytics(db: Session, student_id: str) -> dict:
+        sessions = db.query(InterviewSession).filter(
+            InterviewSession.student_id == student_id, 
+            InterviewSession.status == "COMPLETED"
+        ).order_by(InterviewSession.started_at.asc()).all()
+        
+        total = len(sessions)
+        if total == 0:
+            return {
+                "total_interviews": 0,
+                "history": []
+            }
+            
+        scores = [s.overall_score for s in sessions if s.overall_score is not None]
+        avg_score = sum(scores) / len(scores) if scores else None
+        best_score = max(scores) if scores else None
+        
+        history = [
+            {
+                "id": s.id,
+                "target_role": s.target_role,
+                "interview_type": s.interview_type,
+                "mode": s.mode,
+                "status": s.status,
+                "started_at": s.started_at,
+                "completed_at": s.completed_at,
+                "overall_score": s.overall_score,
+                "duration_seconds": s.duration_seconds
+            }
+            for s in sessions
+        ]
+        
+        return {
+            "total_interviews": total,
+            "average_score": avg_score,
+            "best_score": best_score,
+            "history": history
+        }
+
+    @staticmethod
+    def update_readiness(db: Session, student_id: str):
+        sessions = db.query(InterviewSession).filter(
+            InterviewSession.student_id == student_id, 
+            InterviewSession.status == "COMPLETED"
+        ).all()
+        
+        scores = [s.overall_score for s in sessions if s.overall_score is not None]
+        if scores:
+            best_score = max(scores)
+            CareerReadinessService.update_component(db, student_id, "INTERVIEW", best_score)

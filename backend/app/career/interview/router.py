@@ -9,17 +9,10 @@ from .schemas import (
     CreateInterview, InterviewSessionResponse, 
     InterviewHistoryItem, InterviewResponseSubmit,
     InterviewResponseResult, InterviewQuestionResponse,
-    InterviewReview
+    InterviewReview, InterviewAnalytics
 )
 
 router = APIRouter()
-
-async def get_current_student_id(token: str = Depends(student_context_service.get_current_student)):
-    # student_context_service.get_current_student returns a Student object in this codebase.
-    # We'll just extract the id.
-    if not token:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return token.id
 
 @router.post("/", response_model=InterviewSessionResponse)
 async def start_interview(
@@ -29,7 +22,7 @@ async def start_interview(
 ):
     if not student:
         raise HTTPException(status_code=401, detail="Not authenticated")
-    return InterviewService.create_session(db, student.id, setup)
+    return await InterviewService.create_session(db, student.id, setup)
 
 @router.get("/", response_model=List[InterviewHistoryItem])
 def list_interviews(
@@ -39,6 +32,15 @@ def list_interviews(
     if not student:
         raise HTTPException(status_code=401, detail="Not authenticated")
     return InterviewService.list_sessions(db, student.id)
+    
+@router.get("/analytics", response_model=InterviewAnalytics)
+def get_analytics(
+    db: Session = Depends(get_db),
+    student: any = Depends(student_context_service.get_current_student)
+):
+    if not student:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return InterviewService.get_analytics(db, student.id)
 
 @router.get("/{session_id}", response_model=InterviewSessionResponse)
 def get_interview(
@@ -75,7 +77,7 @@ async def submit_answer(
     if not student:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        return InterviewService.submit_answer(db, student.id, session_id, question_id, payload)
+        return await InterviewService.submit_answer(db, student.id, session_id, question_id, payload)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -88,7 +90,7 @@ async def complete_interview(
     if not student:
         raise HTTPException(status_code=401, detail="Not authenticated")
     try:
-        return InterviewService.complete_session(db, student.id, session_id)
+        return await InterviewService.complete_session(db, student.id, session_id)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
