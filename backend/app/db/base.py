@@ -6,3 +6,4 @@ from app.career.skills.models import StudentSkill
 from app.career.readiness.models import CareerReadinessScore
 from app.career.progress.models import CareerProgress
 from app.career.ai_insights.models import AIInsight
+from app.career.assessments.models import Assessment, AssessmentQuestion, AssessmentAttempt, AssessmentAnswer

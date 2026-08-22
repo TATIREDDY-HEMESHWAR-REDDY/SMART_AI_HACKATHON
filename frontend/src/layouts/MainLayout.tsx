@@ -15,7 +15,7 @@ import { useStudent } from '@/contexts/StudentContext';
 const navigation = [
   { name: 'Dashboard', href: '/career', icon: LayoutDashboard },
   { name: 'Profile', href: '/career/profile', icon: User },
-  { name: 'Assessments', href: '/career/assessments', icon: Target },
+  { name: 'Aptitude', href: '/career/aptitude', icon: Target },
   { name: 'Coding', href: '/career/coding', icon: Code2 },
   { name: 'Resume', href: '/career/resume', icon: FileText },
   { name: 'Jobs', href: '/career/jobs', icon: Briefcase },
