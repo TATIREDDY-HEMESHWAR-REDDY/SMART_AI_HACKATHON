@@ -61,6 +61,8 @@ coverage.xml
 # Prisma & Local database
 /prisma/dev.db
 /prisma/dev.db-journal
+campusos/data/*.db
+campusos/data/*.db-journal
 
 # Compiled credentials & temporary keys
 *.pem

@@ -1,6 +1,6 @@
-# HAYAGRIVA VIDYA KENDRAM (Monorepo)
+# CAMPUS OS (Monorepo)
 
-Welcome to the **HAYAGRIVA VIDYA KENDRAM** master repository. This repository implements a unified campus ERP, career preparation system, and digital credential wallet for a fictional VIT Chennai-style campus model.
+Welcome to the **CAMPUS OS** master repository. This repository implements a unified campus ERP, career preparation system, and digital credential wallet for a fictional VIT Chennai-style campus model.
 
 This document serves as the **Single Source of Truth** for the repository structure, branch workflow, coding contracts, and integration guidelines.
 
