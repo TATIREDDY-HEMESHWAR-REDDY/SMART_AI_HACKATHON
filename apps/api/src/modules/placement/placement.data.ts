@@ -47,7 +47,7 @@ export const PlacementData = {
         description: data.description,
         registrationDeadline: new Date(data.registrationDeadline),
         companyId: data.companyId,
-        status: 'PUBLISHED'
+        status: 'DRAFT'
       }
     });
   },
@@ -57,8 +57,11 @@ export const PlacementData = {
       data: {
         driveId,
         title: data.title,
+        description: data.description || null,
         packageDetails: data.packageDetails,
         location: data.location,
+        skills: data.skills || [],
+        selectionSteps: data.selectionSteps || []
       }
     });
     

@@ -103,12 +103,60 @@ export const App = () => {
           
           <Route path="/dashboard" element={
             <div className="p-6">
-              <h2 className="text-2xl font-bold mb-4">Dashboard</h2>
+              <h2 className="text-2xl font-bold mb-6">Welcome back, {JSON.parse(localStorage.getItem('user') || '{}').profile?.firstName || 'User'}!</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                  <h3 className="text-gray-500 font-medium">Quick Stats</h3>
-                  <p className="text-3xl font-bold mt-2">Active</p>
-                </div>
+                {JSON.parse(localStorage.getItem('user') || '{}').roles?.includes('STUDENT') && (
+                  <>
+                    <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Current Semester CGPA</h3>
+                      <p className="text-3xl font-bold mt-2">8.4</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Attendance</h3>
+                      <p className="text-3xl font-bold mt-2">87%</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-500 to-indigo-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Upcoming Assessments</h3>
+                      <p className="text-3xl font-bold mt-2">2</p>
+                    </div>
+                  </>
+                )}
+                {JSON.parse(localStorage.getItem('user') || '{}').roles?.includes('FACULTY') && (
+                  <>
+                    <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Classes Today</h3>
+                      <p className="text-3xl font-bold mt-2">3</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-teal-500 to-teal-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Pending Evaluations</h3>
+                      <p className="text-3xl font-bold mt-2">45</p>
+                    </div>
+                  </>
+                )}
+                {JSON.parse(localStorage.getItem('user') || '{}').roles?.includes('COLLEGE_ADMIN') && (
+                  <>
+                    <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Total Students</h3>
+                      <p className="text-3xl font-bold mt-2">1,240</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Total Faculty</h3>
+                      <p className="text-3xl font-bold mt-2">85</p>
+                    </div>
+                  </>
+                )}
+                {JSON.parse(localStorage.getItem('user') || '{}').roles?.includes('TPO') && (
+                  <>
+                    <div className="bg-gradient-to-br from-blue-600 to-indigo-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Active Placement Drives</h3>
+                      <p className="text-3xl font-bold mt-2">4</p>
+                    </div>
+                    <div className="bg-gradient-to-br from-indigo-600 to-purple-600 text-white p-6 rounded-xl shadow-sm">
+                      <h3 className="font-medium opacity-90">Registered Companies</h3>
+                      <p className="text-3xl font-bold mt-2">12</p>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           } />

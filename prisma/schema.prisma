@@ -455,8 +455,11 @@ model Job {
   driveId        String
   drive          PlacementDrive @relation(fields: [driveId], references: [id], onDelete: Cascade)
   title          String
+  description    String?
   packageDetails String
   location       String
+  skills         String[]
+  selectionSteps String[]
 
   eligibility  EligibilityRule?
   applications JobApplication[]

@@ -106,23 +106,37 @@ export const Login = () => {
             <button 
               type="button"
               onClick={() => { setEmail('student@hvk.edu'); setPassword('password123'); }}
-              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
+              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-blue-50 hover:border-blue-300 text-gray-600"
             >
-              Student
+              🎓 Student
             </button>
             <button 
               type="button"
               onClick={() => { setEmail('faculty@hvk.edu'); setPassword('password123'); }}
-              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
+              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-green-50 hover:border-green-300 text-gray-600"
             >
-              Faculty
+              👨‍🏫 Faculty
             </button>
             <button 
               type="button"
               onClick={() => { setEmail('admin@hvk.edu'); setPassword('password123'); }}
-              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-gray-50 text-gray-600"
+              className="px-3 py-1.5 text-xs font-medium rounded border border-gray-200 hover:bg-purple-50 hover:border-purple-300 text-gray-600"
             >
-              Admin
+              🛡️ Admin
+            </button>
+            <button 
+              type="button"
+              onClick={() => { setEmail('tpo@hvk.edu'); setPassword('password123'); }}
+              className="px-3 py-1.5 text-xs font-medium rounded border border-indigo-200 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold"
+            >
+              📋 TPO
+            </button>
+            <button 
+              type="button"
+              onClick={() => { setEmail('recruiter@hvk.edu'); setPassword('password123'); }}
+              className="px-3 py-1.5 text-xs font-medium rounded border border-orange-200 bg-orange-50 hover:bg-orange-100 text-orange-700 font-semibold"
+            >
+              🏢 Recruiter
             </button>
           </div>
         </div>

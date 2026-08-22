@@ -187,11 +187,42 @@ async function main() {
     }
   });
 
+  // 10. TPO Role & User (Placement Modules P-R)
+  const tpoRole = await prisma.role.upsert({ where: { name: 'TPO' }, update: {}, create: { name: 'TPO' } });
+  await prisma.user.upsert({
+    where: { email: 'tpo@hvk.edu' },
+    update: {},
+    create: {
+      email: 'tpo@hvk.edu',
+      passwordHash,
+      institutionId: institution.id,
+      roles: { create: { roleId: tpoRole.id } }
+    }
+  });
+
+  // 11. Recruiter Role & User (Placement Modules P-R)
+  const recruiterRole = await prisma.role.upsert({ where: { name: 'RECRUITER' }, update: {}, create: { name: 'RECRUITER' } });
+  await prisma.user.upsert({
+    where: { email: 'recruiter@hvk.edu' },
+    update: {},
+    create: {
+      email: 'recruiter@hvk.edu',
+      passwordHash,
+      institutionId: institution.id,
+      roles: { create: { roleId: recruiterRole.id } }
+    }
+  });
+
+  // 12. Alumni Role (Alumni Modules)
+  const alumniRole = await prisma.role.upsert({ where: { name: 'ALUMNI' }, update: {}, create: { name: 'ALUMNI' } });
+
   console.log('✅ Seeding complete!');
   console.log('Login credentials:');
-  console.log('  STUDENT: student@hvk.edu / password123');
-  console.log('  FACULTY: faculty@hvk.edu / password123');
-  console.log('  ADMIN: admin@hvk.edu / password123');
+  console.log('  STUDENT:   student@hvk.edu / password123');
+  console.log('  FACULTY:   faculty@hvk.edu / password123');
+  console.log('  ADMIN:     admin@hvk.edu / password123');
+  console.log('  TPO:       tpo@hvk.edu / password123');
+  console.log('  RECRUITER: recruiter@hvk.edu / password123');
 }
 
 main()

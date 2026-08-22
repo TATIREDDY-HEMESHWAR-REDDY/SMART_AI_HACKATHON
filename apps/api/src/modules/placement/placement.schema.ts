@@ -19,11 +19,14 @@ export const createDriveSchema = z.object({
 
 export const createJobSchema = z.object({
   title: z.string().min(1),
+  description: z.string().min(1).optional(),
   packageDetails: z.string(),
   location: z.string().min(1),
+  skills: z.array(z.string()).optional(),
+  selectionSteps: z.array(z.string()).optional(),
   eligibility: z.object({
     minCgpa: z.number().min(0).max(10),
     allowedBranches: z.array(z.string()),
     maxBacklogs: z.number().int().min(0)
-  })
+  }).optional()
 });

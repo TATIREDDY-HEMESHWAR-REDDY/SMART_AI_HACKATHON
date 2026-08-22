@@ -48,9 +48,51 @@ export default async function placementRoutes(server: FastifyInstance) {
     preHandler: [server.requireRole(['TPO'])],
     handler: async (request: any, reply) => {
       const { driveId } = request.params;
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      const drive = await prisma.placementDrive.findUnique({ where: { id: driveId } });
+      if (!drive) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Drive not found' } });
+      if (drive.status === 'COMPLETED' || drive.status === 'CLOSED') {
+        return reply.status(400).send({ success: false, error: { code: 'DRIVE_CLOSED', message: 'Cannot add jobs to a closed drive' } });
+      }
+
       const data = createJobSchema.parse(request.body);
       const job = await PlacementData.createJob(driveId, data);
       return { success: true, data: { job } };
     }
+  });
+
+  server.patch('/drives/:driveId/status', {
+    preHandler: [server.requireRole(['TPO'])],
+    handler: async (request: any, reply) => {
+      const { driveId } = request.params;
+      const { status } = request.body;
+      if (!['DRAFT', 'PUBLISHED', 'ONGOING', 'COMPLETED', 'CLOSED'].includes(status)) {
+        return reply.status(400).send({ success: false, error: { code: 'INVALID_STATUS', message: 'Invalid status' } });
+      }
+      
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      const drive = await prisma.placementDrive.update({
+        where: { id: driveId },
+        data: { status }
+      });
+      return { success: true, data: { drive } };
+    }
+  });
+
+  server.get('/companies', async (request, reply) => {
+    const companies = await PlacementData.getCompanies();
+    return { success: true, data: { companies } };
+  });
+
+  server.get('/drives', async (request, reply) => {
+    const drives = await PlacementData.getDrives();
+    return { success: true, data: { drives } };
+  });
+
+  server.get('/jobs', async (request, reply) => {
+    const jobs = await PlacementData.getJobs();
+    return { success: true, data: { jobs } };
   });
 }

@@ -11,7 +11,8 @@ export const PlacementDrive = () => {
   const [companyForm, setCompanyForm] = useState({ name: '', website: '', industry: '' });
   const [driveForm, setDriveForm] = useState({ companyId: '', title: '', description: '', registrationDeadline: '' });
   const [jobForm, setJobForm] = useState({ 
-    title: '', packageDetails: '', location: '', 
+    title: '', description: '', packageDetails: '', location: '', 
+    skills: '', selectionSteps: '',
     minCgpa: '', allowedBranches: '', maxBacklogs: '' 
   });
   
@@ -23,6 +24,24 @@ export const PlacementDrive = () => {
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
   const userRoles = user?.roles || [];
+
+  React.useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [compRes, driveRes] = await Promise.all([
+          fetch('http://localhost:3000/api/v1/placement/companies', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }),
+          fetch('http://localhost:3000/api/v1/placement/drives', { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } })
+        ]);
+        const compData = await compRes.json();
+        const driveData = await driveRes.json();
+        if (compData.success) setCompanies(compData.data.companies);
+        if (driveData.success) setDrives(driveData.data.drives);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -80,6 +99,28 @@ export const PlacementDrive = () => {
     }
   };
 
+  const handleUpdateDriveStatus = async (driveId: string, status: string) => {
+    try {
+      setLoading(true);
+      const res = await fetch(`http://localhost:3000/api/v1/placement/drives/${driveId}/status`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('token')}` },
+        body: JSON.stringify({ status })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMsg(`Drive marked as ${status}.`);
+        setDrives(drives.map(d => d.id === driveId ? { ...d, status } : d));
+      } else {
+        setErrorMsg(data.error?.message || 'Failed to update status.');
+      }
+    } catch (err) {
+      setErrorMsg('Network error.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleAddJob = async (e: React.FormEvent, driveId: string) => {
     e.preventDefault();
     setLoading(true);
@@ -88,8 +129,11 @@ export const PlacementDrive = () => {
     try {
       const payload = {
         title: jobForm.title,
+        description: jobForm.description,
         packageDetails: jobForm.packageDetails,
         location: jobForm.location,
+        skills: jobForm.skills.split(',').map(s => s.trim()).filter(Boolean),
+        selectionSteps: jobForm.selectionSteps.split(',').map(s => s.trim()).filter(Boolean),
         eligibility: {
           minCgpa: parseFloat(jobForm.minCgpa),
           allowedBranches: jobForm.allowedBranches.split(',').map(b => b.trim()),
@@ -104,7 +148,7 @@ export const PlacementDrive = () => {
       const data = await res.json();
       if (data.success) {
         setSuccessMsg('Job added to drive successfully.');
-        setJobForm({ title: '', packageDetails: '', location: '', minCgpa: '', allowedBranches: '', maxBacklogs: '' });
+        setJobForm({ title: '', description: '', packageDetails: '', location: '', skills: '', selectionSteps: '', minCgpa: '', allowedBranches: '', maxBacklogs: '' });
       } else {
         setErrorMsg(data.error?.message || 'Failed to add job.');
       }
@@ -131,12 +175,38 @@ export const PlacementDrive = () => {
         {errorMsg && <div className="bg-red-50 text-red-700 p-4 rounded-lg">{errorMsg}</div>}
 
         {isStudent ? (
-          <div className="bg-white p-6 border rounded-xl shadow-sm text-center py-12">
-            <Briefcase className="w-12 h-12 text-indigo-200 mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-gray-900 mb-2">Student Application Portal</h3>
-            <p className="text-gray-500 mb-6">
-              The student application interface is currently being integrated with the new Resume AI module.
-            </p>
+          <div className="space-y-6">
+            <div className="bg-white p-6 border rounded-xl shadow-sm text-center py-8">
+              <Briefcase className="w-12 h-12 text-indigo-200 mx-auto mb-4" />
+              <h3 className="text-xl font-medium text-gray-900 mb-2">Student Placement Portal</h3>
+              <p className="text-gray-500">
+                View active placement drives. The application interface (Module R) is coming next.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {drives.filter(d => d.status === 'PUBLISHED').map(drive => (
+                <div key={drive.id} className="border p-6 rounded-xl bg-white shadow-sm flex flex-col">
+                  <div className="flex justify-between items-start mb-4 border-b pb-4">
+                    <div>
+                      <h4 className="font-bold text-xl text-gray-800">{drive.title}</h4>
+                      <p className="text-sm text-gray-500 mt-1">{drive.description}</p>
+                    </div>
+                    <span className="text-xs font-semibold px-2 py-1 rounded bg-green-100 text-green-700">Active</span>
+                  </div>
+                  <div className="text-sm text-gray-600 mb-4">
+                    <p><strong>Deadline:</strong> {new Date(drive.registrationDeadline).toLocaleDateString()}</p>
+                  </div>
+                  <button disabled className="mt-auto w-full bg-gray-100 text-gray-500 rounded-lg py-2 cursor-not-allowed font-medium">
+                    Applications Open Soon
+                  </button>
+                </div>
+              ))}
+              {drives.filter(d => d.status === 'PUBLISHED').length === 0 && (
+                <div className="col-span-full text-center text-gray-400 italic py-8">
+                  No active placement drives at the moment.
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <>
@@ -211,12 +281,29 @@ export const PlacementDrive = () => {
               
               <div className="space-y-6">
                 {drives.map(drive => (
-                  <div key={drive.id} className="border p-4 rounded-lg bg-gray-50">
-                    <h4 className="font-bold text-lg mb-4">{drive.title}</h4>
+                  <div key={drive.id} className="border p-4 rounded-lg bg-gray-50 flex flex-col">
+                    <div className="flex justify-between items-center mb-4 border-b pb-2">
+                      <div>
+                        <h4 className="font-bold text-lg text-gray-800">{drive.title}</h4>
+                        <span className="text-xs font-semibold px-2 py-1 rounded bg-indigo-100 text-indigo-700">{drive.status}</span>
+                      </div>
+                      <div className="space-x-2">
+                        {drive.status === 'DRAFT' && (
+                          <button onClick={() => handleUpdateDriveStatus(drive.id, 'PUBLISHED')} className="px-3 py-1 bg-green-600 text-white text-xs font-bold rounded hover:bg-green-700">Publish Drive</button>
+                        )}
+                        {drive.status === 'PUBLISHED' && (
+                          <button onClick={() => handleUpdateDriveStatus(drive.id, 'CLOSED')} className="px-3 py-1 bg-red-600 text-white text-xs font-bold rounded hover:bg-red-700">Close Drive</button>
+                        )}
+                      </div>
+                    </div>
                     <form onSubmit={(e) => handleAddJob(e, drive.id)} className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Job Title</label>
                         <input required type="text" className="w-full border rounded p-1.5 text-sm" value={jobForm.title} onChange={e => setJobForm({...jobForm, title: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Job Description</label>
+                        <input type="text" className="w-full border rounded p-1.5 text-sm" value={jobForm.description} onChange={e => setJobForm({...jobForm, description: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Package Details</label>
@@ -225,6 +312,14 @@ export const PlacementDrive = () => {
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Location</label>
                         <input required type="text" className="w-full border rounded p-1.5 text-sm" value={jobForm.location} onChange={e => setJobForm({...jobForm, location: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Skills (comma separated)</label>
+                        <input type="text" className="w-full border rounded p-1.5 text-sm" placeholder="React, Node.js" value={jobForm.skills} onChange={e => setJobForm({...jobForm, skills: e.target.value})} />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-gray-700 mb-1">Selection Steps (comma separated)</label>
+                        <input type="text" className="w-full border rounded p-1.5 text-sm" placeholder="Aptitude, Technical, HR" value={jobForm.selectionSteps} onChange={e => setJobForm({...jobForm, selectionSteps: e.target.value})} />
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">Min CGPA</label>
