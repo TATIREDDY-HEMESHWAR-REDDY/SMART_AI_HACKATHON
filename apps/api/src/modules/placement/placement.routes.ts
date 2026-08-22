@@ -95,4 +95,92 @@ export default async function placementRoutes(server: FastifyInstance) {
     const jobs = await PlacementData.getJobs();
     return { success: true, data: { jobs } };
   });
+  server.get('/jobs/:jobId/eligibility', {
+    preHandler: [server.requireRole(['STUDENT'])],
+    handler: async (request: any, reply) => {
+      const { jobId } = request.params;
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      const profile = await prisma.studentProfile.findUnique({ where: { userId: request.user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Student profile not found' });
+
+      try {
+        const result = await PlacementData.checkEligibility(jobId, profile.id);
+        return { success: true, data: result };
+      } catch (err: any) {
+        return reply.status(400).send({ success: false, message: err.message });
+      }
+    }
+  });
+
+  server.post('/jobs/:jobId/apply', {
+    preHandler: [server.requireRole(['STUDENT'])],
+    handler: async (request: any, reply) => {
+      const { jobId } = request.params;
+      const { resumeId } = request.body;
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      const profile = await prisma.studentProfile.findUnique({ where: { userId: request.user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Student profile not found' });
+
+      const eligibility = await PlacementData.checkEligibility(jobId, profile.id);
+      if (!eligibility.isEligible) {
+        return reply.status(400).send({ 
+          success: false, 
+          message: 'You do not meet the eligibility criteria for this job.',
+          data: { criteria: eligibility.criteria }
+        });
+      }
+
+      const existing = await prisma.jobApplication.findUnique({
+        where: { jobId_studentId: { jobId, studentId: profile.id } }
+      });
+      if (existing) {
+        return reply.status(400).send({ success: false, message: 'You have already applied for this job.' });
+      }
+
+      let finalResumeId = resumeId;
+      if (!finalResumeId) {
+        const primaryResume = await prisma.resume.findFirst({ where: { studentId: profile.id, isPrimary: true } });
+        if (!primaryResume) {
+          return reply.status(400).send({ success: false, message: 'No resume provided and no primary resume found.' });
+        }
+        finalResumeId = primaryResume.id;
+      } else {
+         const resume = await prisma.resume.findUnique({ where: { id: finalResumeId } });
+         if (!resume || resume.studentId !== profile.id) {
+           return reply.status(400).send({ success: false, message: 'Invalid resume selection.' });
+         }
+      }
+
+      const application = await prisma.jobApplication.create({
+        data: {
+          jobId,
+          studentId: profile.id,
+          resumeId: finalResumeId,
+          status: 'APPLIED'
+        }
+      });
+      
+      return { success: true, data: { application } };
+    }
+  });
+
+  server.get('/applications/me', {
+    preHandler: [server.requireRole(['STUDENT'])],
+    handler: async (request: any, reply) => {
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      const profile = await prisma.studentProfile.findUnique({ where: { userId: request.user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Profile not found' });
+
+      const applications = await prisma.jobApplication.findMany({
+        where: { studentId: profile.id },
+        include: { job: { include: { drive: { include: { company: true } } } } },
+        orderBy: { id: 'desc' }
+      });
+      return { success: true, data: { applications } };
+    }
+  });
 }

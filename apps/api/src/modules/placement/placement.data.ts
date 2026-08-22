@@ -80,6 +80,62 @@ export const PlacementData = {
   
   getCompanies: async () => prisma.company.findMany(),
   getDrives: async () => prisma.placementDrive.findMany(),
-  getJobs: async () => prisma.job.findMany({ include: { eligibility: true } })
+  getJobs: async () => prisma.job.findMany({ include: { eligibility: true } }),
+
+  checkEligibility: async (jobId: string, studentId: string) => {
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { eligibility: true } });
+    if (!job) throw new Error('Job not found');
+
+    const student = await prisma.studentProfile.findUnique({ 
+      where: { id: studentId },
+      include: { program: { include: { department: true } } } 
+    });
+    if (!student) throw new Error('Student not found');
+
+    const rule = job.eligibility;
+    if (!rule) {
+      return { isEligible: true, criteria: [] }; // No specific rules
+    }
+
+    const criteria = [];
+    let isEligible = true;
+
+    // 1. CGPA
+    const cgpaPass = student.cgpa >= rule.minCgpa;
+    criteria.push({ name: 'CGPA Minimum', required: rule.minCgpa, actual: student.cgpa, passed: cgpaPass });
+    if (!cgpaPass) isEligible = false;
+
+    // 2. Branch
+    const branchName = student.program.name; 
+    let branchPass = false;
+    if (rule.allowedBranches.length === 0 || rule.allowedBranches.includes('ALL')) {
+        branchPass = true;
+    } else {
+        branchPass = rule.allowedBranches.some(b => branchName.toLowerCase().includes(b.toLowerCase()) || student.program.department?.name.toLowerCase().includes(b.toLowerCase()));
+    }
+    criteria.push({ name: 'Allowed Branch', required: rule.allowedBranches.join(', ') || 'Any', actual: branchName, passed: branchPass });
+    if (!branchPass) isEligible = false;
+
+    // 3. Backlogs
+    const backlogsPass = student.activeBacklogs <= rule.maxBacklogs;
+    criteria.push({ name: 'Max Backlogs', required: rule.maxBacklogs, actual: student.activeBacklogs, passed: backlogsPass });
+    if (!backlogsPass) isEligible = false;
+
+    // 4. Required Skills
+    let skillsPass = true;
+    let actualSkills = student.skills || [];
+    if (job.skills && job.skills.length > 0) {
+        const missingSkills = job.skills.filter(s => !actualSkills.map(a => a.toLowerCase()).includes(s.toLowerCase()));
+        if (missingSkills.length > 0) {
+            skillsPass = false;
+            criteria.push({ name: 'Required Skills', required: job.skills.join(', '), actual: 'Missing: ' + missingSkills.join(', '), passed: false });
+        } else {
+            criteria.push({ name: 'Required Skills', required: job.skills.join(', '), actual: 'Matches all', passed: true });
+        }
+    }
+    if (!skillsPass) isEligible = false;
+
+    return { isEligible, criteria };
+  }
 };
 

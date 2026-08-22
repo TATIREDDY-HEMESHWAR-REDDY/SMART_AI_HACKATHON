@@ -114,6 +114,7 @@ model StudentProfile {
   program          Program @relation(fields: [programId], references: [id])
   currentSemester  Int     @default(1)
   cgpa             Float   @default(0.0)
+  activeBacklogs   Int     @default(0)
 
   phone           String?
   skills          String[] @default([])
