@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AppShell, RoleGuard, NavItem } from '@campus-os/ui';
-import { BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus, Brain, Target, Building2, Bell, LineChart, MessageSquare } from 'lucide-react';
+import { Users, BookOpen, Calendar, GraduationCap, FileText, Briefcase, ShieldAlert, BadgeCheck, Compass, ListPlus, Brain, Target, Building2, Bell, LineChart, MessageSquare } from 'lucide-react';
 import { CareerProfile } from './features/career/CareerProfile';
 import { SkillCatalog } from './features/career/SkillCatalog';
 import { CareerAssessment } from './features/career/CareerAssessment';
@@ -11,6 +11,7 @@ import { CareerAnalytics } from './features/career/CareerAnalytics';
 import { CareerResume } from './features/career/CareerResume';
 import { CareerMockInterview } from './features/career/CareerMockInterview';
 import { PlacementDrive } from './features/placement/PlacementDrive';
+import { RecruiterDashboard } from './features/placement/RecruiterDashboard';
 import { AlumniDirectory } from './features/alumni/AlumniDirectory';
 import { AlumniEvents } from './features/alumni/AlumniEvents';
 import { Login } from './pages/Login';
@@ -36,7 +37,8 @@ const navItems: NavItem[] = [
   { label: 'Career Analytics', href: '/career/analytics', icon: LineChart, roles: ['TPO', 'FACULTY'] },
   { label: 'Helpdesk', href: '/helpdesk', icon: FileText },
   { label: 'Broadcast', href: '/notifications/manage', icon: Bell, roles: ['COLLEGE_ADMIN', 'ADMIN'] },
-  { label: 'Placement', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO', 'RECRUITER'] },
+  { label: 'Placement Drives', href: '/placement', icon: Briefcase, roles: ['STUDENT', 'TPO'] },
+  { label: 'Recruitment', href: '/recruitment', icon: Users, roles: ['RECRUITER'] },
   { label: 'Alumni Network', href: '/alumni', icon: FileText, roles: ['STUDENT', 'TPO', 'ALUMNI', 'FACULTY'] },
   { label: 'Alumni Events', href: '/alumni/events', icon: Bell, roles: ['STUDENT', 'ALUMNI', 'TPO', 'FACULTY'] },
   { label: 'Credentials', href: '/credentials', icon: BadgeCheck },
@@ -137,6 +139,7 @@ export const App = () => {
           } />
           
           <Route path="/placement" element={<PlacementDrive />} />
+          <Route path="/recruitment" element={<RecruiterDashboard />} />
 
           <Route path="/career" element={<CareerProfile />} />
           <Route path="/skills" element={<SkillCatalog />} />
@@ -162,3 +165,4 @@ export const App = () => {
     </BrowserRouter>
   );
 };
+

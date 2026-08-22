@@ -236,12 +236,12 @@ export const PlacementDrive = () => {
   };
 
   return (
-    <RoleGuard allowedRoles={['TPO', 'RECRUITER', 'STUDENT']} userRoles={userRoles}>
+    <RoleGuard allowedRoles={['TPO', 'STUDENT']} userRoles={userRoles}>
       <div className="p-6 max-w-6xl mx-auto space-y-8">
         <div>
           <h2 className="text-3xl font-bold mb-2">Placement Portal</h2>
           <p className="text-gray-500">
-            {isStudent ? 'View drives, check your eligibility, and apply to jobs.' : 'Create companies, set up drives, and define deterministic job eligibility rules.'}
+            {isStudent ? 'View drives, check your eligibility, and apply to jobs.' : 'TPO Admin: Create companies, set up placement drives, and define deterministic job eligibility rules.'}
           </p>
         </div>
 
@@ -513,3 +513,4 @@ export const PlacementDrive = () => {
     </RoleGuard>
   );
 };
+
