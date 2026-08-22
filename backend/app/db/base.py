@@ -13,3 +13,4 @@ from app.career.resume.models import (
     ResumeSkill, ResumeCertification, ResumeAchievement, 
     ResumeActivity, ResumeAnalysis
 )
+from app.career.interview.models import InterviewSession, InterviewQuestion, InterviewResponse
