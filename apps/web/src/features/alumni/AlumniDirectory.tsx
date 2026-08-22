@@ -8,6 +8,7 @@ interface AlumniProfile {
   currentRole?: string;
   linkedInUrl?: string;
   expertise: string[];
+  user?: { studentProfile?: { firstName: string; lastName: string } };
 }
 
 export function AlumniDirectory() {
@@ -203,7 +204,7 @@ export function AlumniDirectory() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {directory.map(alumni => (
           <div key={alumni.id} className="p-6 border rounded shadow-sm bg-white">
-            <h3 className="font-bold text-lg">{alumni.name}</h3>
+            <h3 className="font-bold text-lg">{alumni.user?.studentProfile?.firstName ? (alumni.user.studentProfile.firstName + ' ' + alumni.user.studentProfile.lastName) : 'Anonymous Alumni'}</h3>
             <p className="text-sm text-gray-500">Class of {alumni.graduationYear}</p>
             
             <div className="mt-4 space-y-2">
@@ -257,3 +258,5 @@ export function AlumniDirectory() {
     </div>
   );
 }
+
+

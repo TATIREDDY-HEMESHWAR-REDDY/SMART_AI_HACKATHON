@@ -1,18 +1,29 @@
-
 import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 class AlumniDataStore {
   async getDirectory() {
     return prisma.alumniProfile.findMany({
-      include: { user: { select: { email: true } } }
+      include: { 
+        user: { 
+          include: { 
+            studentProfile: true 
+          } 
+        } 
+      }
     });
   }
 
   async getProfileByUserId(userId: string) {
     return prisma.alumniProfile.findUnique({
       where: { userId },
-      include: { user: { select: { email: true } } }
+      include: { 
+        user: { 
+          include: { 
+            studentProfile: true 
+          } 
+        } 
+      }
     });
   }
 
@@ -73,4 +84,3 @@ class AlumniDataStore {
 }
 
 export const alumniData = new AlumniDataStore();
-
