@@ -27,7 +27,7 @@ export type StartAssessmentInput = z.infer<typeof startAssessmentSchema>;
 export const submitAssessmentSchema = z.object({
   sessionId: z.string(),
   assessmentId: z.string().uuid(),
-  answers: z.any().optional(), // In a real app, this would be structured based on the test
+  answers: z.any().optional(),
 });
 
 export type SubmitAssessmentInput = z.infer<typeof submitAssessmentSchema>;
@@ -43,3 +43,13 @@ export const analyzeResumeSchema = z.object({
 });
 
 export type AnalyzeResumeInput = z.infer<typeof analyzeResumeSchema>;
+
+export const startMockInterviewSchema = z.object({ 
+  role: z.string().min(1, 'Role is required') 
+});
+export type StartMockInterviewInput = z.infer<typeof startMockInterviewSchema>;
+
+export const submitAnswerSchema = z.object({ 
+  answer: z.string().min(1, 'Answer is required') 
+});
+export type SubmitAnswerInput = z.infer<typeof submitAnswerSchema>;

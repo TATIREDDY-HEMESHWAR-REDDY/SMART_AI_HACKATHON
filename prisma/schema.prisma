@@ -593,4 +593,6 @@ model MockInterview {
   status      String         @default("SCHEDULED")
   feedback    Json?
   aiSessionId String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
 }

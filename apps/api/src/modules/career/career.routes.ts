@@ -456,6 +456,125 @@ export default async function careerRoutes(server: FastifyInstance) {
     return { success: true, data: { analysis } };
   });
 
+  // ==========================================
+  // MODULE O: AI MOCK INTERVIEW
+  // ==========================================
+  server.get('/mock-interview/me', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+    
+    const interviews = await prisma.mockInterview.findMany({
+      where: { studentId },
+      orderBy: { createdAt: 'desc' }
+    });
+    return { success: true, data: { interviews } };
+  });
+
+  server.post('/mock-interview/start', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+
+    const { startMockInterviewSchema } = await import('./career.schema');
+    const parsed = startMockInterviewSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0].message } });
+
+    // AI Mock initialization logic
+    const initialQuestion = `Tell me about yourself and why you're interested in the ${parsed.data.role} role?`;
+    
+    const interview = await prisma.mockInterview.create({
+      data: {
+        studentId,
+        type: 'AI',
+        status: 'IN_PROGRESS',
+        aiSessionId: `ai_sess_${Date.now()}`,
+        feedback: {
+          role: parsed.data.role,
+          questions: [
+            { id: 1, text: initialQuestion, answer: null, evaluation: null }
+          ],
+          currentQuestionIndex: 0,
+          totalScore: 0,
+          completed: false
+        }
+      }
+    });
+
+    return { success: true, data: { interview } };
+  });
+
+  server.post('/mock-interview/:id/answer', { preValidation: [server.requireAuth, server.requireRole(['STUDENT'])] }, async (request: any, reply) => {
+    const studentId = await getStudentProfileId(request.user.id);
+    if (!studentId) return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Student profile not found' } });
+
+    const interviewId = request.params.id;
+    const { submitAnswerSchema } = await import('./career.schema');
+    const parsed = submitAnswerSchema.safeParse(request.body);
+    if (!parsed.success) return reply.status(400).send({ success: false, error: { code: 'VALIDATION_ERROR', message: parsed.error.errors[0].message } });
+
+    const interview = await prisma.mockInterview.findUnique({ where: { id: interviewId } });
+    if (!interview || interview.studentId !== studentId) {
+      return reply.status(404).send({ success: false, error: { code: 'NOT_FOUND', message: 'Interview not found' } });
+    }
+
+    if (interview.status === 'COMPLETED' || !interview.feedback) {
+      return reply.status(400).send({ success: false, error: { code: 'BAD_REQUEST', message: 'Interview is already completed' } });
+    }
+
+    const feedbackData = interview.feedback as any;
+    const currentIndex = feedbackData.currentQuestionIndex;
+    
+    // Deterministic Mock AI Evaluation
+    const wordCount = parsed.data.answer.split(' ').length;
+    const relevance = Math.min(10, Math.max(3, Math.floor(wordCount / 5)));
+    const completeness = Math.min(10, Math.max(4, Math.floor(wordCount / 8)));
+    const technical = Math.min(10, Math.floor(Math.random() * 5) + 5);
+    const clarity = Math.min(10, Math.floor(Math.random() * 4) + 6);
+    const communication = Math.min(10, Math.floor(Math.random() * 4) + 6);
+    
+    const score = Math.round((relevance + completeness + technical + clarity + communication) / 5 * 10); // 0-100
+
+    feedbackData.questions[currentIndex].answer = parsed.data.answer;
+    feedbackData.questions[currentIndex].evaluation = {
+      relevance, completeness, technicalQuality: technical, clarity, communication,
+      score,
+      comment: score > 75 ? 'Great response! You covered the key points well.' : 'Consider adding more specific examples.'
+    };
+
+    // Determine next question or end
+    const MAX_QUESTIONS = 3;
+    if (currentIndex + 1 >= MAX_QUESTIONS) {
+      feedbackData.completed = true;
+      interview.status = 'COMPLETED';
+      // calculate total score
+      const totalScore = Math.round(feedbackData.questions.reduce((acc: number, q: any) => acc + (q.evaluation?.score || 0), 0) / MAX_QUESTIONS);
+      feedbackData.totalScore = totalScore;
+      feedbackData.finalFeedback = totalScore > 80 ? 'Excellent performance overall!' : 'Keep practicing, you are making progress.';
+    } else {
+      feedbackData.currentQuestionIndex += 1;
+      const nextQTexts = [
+        'How do you handle challenging problems or bugs in your code?',
+        'Describe a time you worked in a team and disagreed with a teammate.',
+        'Where do you see yourself in 5 years?'
+      ];
+      feedbackData.questions.push({
+        id: currentIndex + 2,
+        text: nextQTexts[currentIndex % nextQTexts.length],
+        answer: null,
+        evaluation: null
+      });
+    }
+
+    const updated = await prisma.mockInterview.update({
+      where: { id: interview.id },
+      data: {
+        status: interview.status,
+        feedback: feedbackData
+      }
+    });
+
+    return { success: true, data: { interview: updated } };
+  });
+
   // GET /api/v1/career/analytics/dashboard
   // Roles: TPO, FACULTY
   server.get('/analytics/dashboard', {
