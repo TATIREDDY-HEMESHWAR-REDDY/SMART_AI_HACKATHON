@@ -19,6 +19,42 @@ export const PlacementData = {
     });
   },
 
+    updateApplicationStatus: async (userId: string, applicationId: string, status: string, details?: any) => {
+    const recruiter = await prisma.recruiter.findUnique({ where: { userId } });
+    if (!recruiter || !recruiter.isVerified) throw new Error('Unauthorized or pending verification');
+
+    const application = await prisma.jobApplication.findUnique({ 
+      where: { id: applicationId }, 
+      include: { job: { include: { drive: true } } } 
+    });
+    
+    if (!application) throw new Error('Application not found');
+    if (application.job.drive.companyId !== recruiter.companyId) throw new Error('Unauthorized access to this application');
+    if (application.status === 'WITHDRAWN') throw new Error('Cannot update a withdrawn application');
+
+    if (status === 'INTERVIEW' && details?.scheduledAt) {
+      await prisma.interview.create({
+        data: {
+          applicationId,
+          scheduledAt: new Date(details.scheduledAt),
+          type: details.type || 'Technical Interview'
+        }
+      });
+    }
+
+    if (status === 'SELECTED' && details?.offerLetterUrl) {
+      await prisma.selectionResult.upsert({
+         where: { applicationId },
+         create: { applicationId, offerLetterUrl: details.offerLetterUrl },
+         update: { offerLetterUrl: details.offerLetterUrl }
+      });
+    }
+    
+    return prisma.jobApplication.update({
+      where: { id: applicationId },
+      data: { status }
+    });
+  },
   getJobApplicants: async (userId: string, jobId: string) => {
     const recruiter = await prisma.recruiter.findUnique({ where: { userId } });
     if (!recruiter || !recruiter.isVerified) throw new Error('Unauthorized or pending verification');
@@ -192,5 +228,6 @@ export const PlacementData = {
     return { isEligible, criteria };
   }
 };
+
 
 

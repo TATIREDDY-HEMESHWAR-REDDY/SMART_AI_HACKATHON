@@ -259,4 +259,17 @@ export default async function placementRoutes(server: FastifyInstance) {
       }
     }
   });
+  server.patch('/recruiters/me/applications/:applicationId/status', {
+    preHandler: [server.requireRole(['RECRUITER'])],
+    handler: async (request: any, reply) => {
+      try {
+        const { status, details } = request.body;
+        if (!status) return reply.status(400).send({ success: false, message: 'Status is required' });
+        const application = await PlacementData.updateApplicationStatus(request.user.id, request.params.applicationId, status, details);
+        return { success: true, data: { application } };
+      } catch (err: any) {
+        return reply.status(400).send({ success: false, message: err.message });
+      }
+    }
+  });
 }

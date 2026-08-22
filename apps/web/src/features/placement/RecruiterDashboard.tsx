@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RoleGuard } from '@campus-os/ui';
-import { Users, Briefcase, FileSearch, Building, Clock, FileText, Filter, ChevronRight, X, ExternalLink } from 'lucide-react';
+import { Users, Briefcase, FileSearch, Building, Clock, FileText, Filter, ChevronRight, CheckCircle, XCircle, Calendar } from 'lucide-react';
 
 export const RecruiterDashboard = () => {
   const [loading, setLoading] = useState(false);
@@ -15,8 +15,13 @@ export const RecruiterDashboard = () => {
   const [form, setForm] = useState({ companyId: '', designation: '' });
   const [newCompany, setNewCompany] = useState({ name: '', website: '', industry: '' });
   const [isNewCompany, setIsNewCompany] = useState(false);
+  
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+  
+  // Modal states for Interview scheduling
+  const [showInterviewModal, setShowInterviewModal] = useState<any>(null);
+  const [interviewDetails, setInterviewDetails] = useState({ scheduledAt: '', type: 'Technical' });
 
   const userStr = localStorage.getItem('user');
   const user = userStr ? JSON.parse(userStr) : null;
@@ -108,6 +113,29 @@ export const RecruiterDashboard = () => {
     }
   };
 
+  const handleUpdateStatus = async (applicationId: string, status: string, details?: any) => {
+    try {
+      const headers = { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` };
+      const res = await fetch(`http://localhost:3000/api/v1/placement/recruiters/me/applications/${applicationId}/status`, {
+        method: 'PATCH',
+        headers,
+        body: JSON.stringify({ status, details })
+      });
+      const data = await res.json();
+      if (data.success) {
+         setSuccessMsg(`Status updated to ${status}`);
+         setShowInterviewModal(null);
+         // Refresh applicants
+         fetchApplicants(selectedJob);
+      } else {
+         setErrorMsg(data.message || 'Failed to update status');
+      }
+    } catch(e) { console.error(e); }
+    finally {
+      setTimeout(() => { setSuccessMsg(''); setErrorMsg(''); }, 3000);
+    }
+  };
+
   const filteredApplications = applications.filter(app => statusFilter === 'ALL' || app.status === statusFilter);
 
   const getStatusColor = (status: string) => {
@@ -115,6 +143,7 @@ export const RecruiterDashboard = () => {
       case 'APPLIED': return 'bg-blue-100 text-blue-800';
       case 'UNDER_REVIEW': return 'bg-yellow-100 text-yellow-800';
       case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
+      case 'INTERVIEW': return 'bg-orange-100 text-orange-800';
       case 'SELECTED': return 'bg-green-100 text-green-800';
       case 'REJECTED': return 'bg-red-100 text-red-800';
       case 'WITHDRAWN': return 'bg-gray-200 text-gray-700';
@@ -127,7 +156,7 @@ export const RecruiterDashboard = () => {
   }
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-8">
+    <div className="p-6 max-w-7xl mx-auto space-y-8 relative">
       <div>
         <h2 className="text-3xl font-bold mb-2">Recruitment Dashboard</h2>
         <p className="text-gray-500">
@@ -263,6 +292,7 @@ export const RecruiterDashboard = () => {
                          <option value="APPLIED">Applied</option>
                          <option value="UNDER_REVIEW">Under Review</option>
                          <option value="SHORTLISTED">Shortlisted</option>
+                         <option value="INTERVIEW">Interview Scheduled</option>
                          <option value="SELECTED">Selected</option>
                          <option value="REJECTED">Rejected</option>
                          <option value="WITHDRAWN">Withdrawn</option>
@@ -280,14 +310,14 @@ export const RecruiterDashboard = () => {
                      ) : (
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {filteredApplications.map(app => (
-                            <div key={app.id} className="bg-white border rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow">
+                            <div key={app.id} className="bg-white border rounded-lg p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col">
                                <div className="flex justify-between items-start mb-4">
                                   <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-full bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold text-lg">
-                                      {app.student?.firstName + ' ' + app.student?.lastName?.charAt(0) || 'S'}
+                                      {app.student?.firstName?.charAt(0) || 'S'}
                                     </div>
                                     <div>
-                                      <h4 className="font-bold text-gray-800">{app.student?.firstName + ' ' + app.student?.lastName}</h4>
+                                      <h4 className="font-bold text-gray-800">{app.student?.firstName} {app.student?.lastName}</h4>
                                       <p className="text-xs text-gray-500">{app.student?.program?.name}</p>
                                     </div>
                                   </div>
@@ -313,15 +343,42 @@ export const RecruiterDashboard = () => {
                                  </div>
                                </div>
 
-                               <div className="flex gap-2">
-                                 <a 
-                                   href={app.resume?.fileUrl} 
-                                   target="_blank" 
-                                   rel="noopener noreferrer"
-                                   className="flex-1 border text-gray-700 bg-white hover:bg-gray-50 rounded py-2 text-xs font-bold flex justify-center items-center gap-1 transition-colors"
-                                 >
-                                   <FileText size={14}/> View Resume
-                                 </a>
+                               {/* Action Bar */}
+                               <div className="mt-auto space-y-3">
+                                 <div className="flex gap-2">
+                                   <a 
+                                     href={app.resume?.fileUrl} 
+                                     target="_blank" 
+                                     rel="noopener noreferrer"
+                                     className="flex-1 border text-gray-700 bg-white hover:bg-gray-50 rounded py-1.5 text-xs font-bold flex justify-center items-center gap-1 transition-colors"
+                                   >
+                                     <FileText size={14}/> Resume
+                                   </a>
+                                 </div>
+
+                                 {/* Dynamic Status Mutations (Module U) */}
+                                 {app.status !== 'WITHDRAWN' && (
+                                   <div className="flex flex-wrap gap-2 pt-3 border-t">
+                                     {(app.status === 'APPLIED' || app.status === 'UNDER_REVIEW') && (
+                                        <>
+                                          <button onClick={() => handleUpdateStatus(app.id, 'SHORTLISTED')} className="flex-1 bg-purple-100 text-purple-700 hover:bg-purple-200 rounded py-1.5 text-xs font-bold transition-colors">Shortlist</button>
+                                          <button onClick={() => handleUpdateStatus(app.id, 'REJECTED')} className="flex-1 bg-red-100 text-red-700 hover:bg-red-200 rounded py-1.5 text-xs font-bold transition-colors">Reject</button>
+                                        </>
+                                     )}
+                                     {app.status === 'SHORTLISTED' && (
+                                        <>
+                                          <button onClick={() => setShowInterviewModal(app)} className="flex-1 bg-orange-100 text-orange-700 hover:bg-orange-200 rounded py-1.5 text-xs font-bold transition-colors flex items-center justify-center gap-1"><Calendar size={14}/> Interview</button>
+                                          <button onClick={() => handleUpdateStatus(app.id, 'REJECTED')} className="flex-1 bg-red-100 text-red-700 hover:bg-red-200 rounded py-1.5 text-xs font-bold transition-colors">Reject</button>
+                                        </>
+                                     )}
+                                     {app.status === 'INTERVIEW' && (
+                                        <>
+                                          <button onClick={() => handleUpdateStatus(app.id, 'SELECTED')} className="flex-1 bg-green-100 text-green-700 hover:bg-green-200 rounded py-1.5 text-xs font-bold transition-colors flex items-center justify-center gap-1"><CheckCircle size={14}/> Select Candidate</button>
+                                          <button onClick={() => handleUpdateStatus(app.id, 'REJECTED')} className="flex-1 bg-red-100 text-red-700 hover:bg-red-200 rounded py-1.5 text-xs font-bold transition-colors">Reject</button>
+                                        </>
+                                     )}
+                                   </div>
+                                 )}
                                </div>
                             </div>
                           ))}
@@ -333,13 +390,58 @@ export const RecruiterDashboard = () => {
                <div className="bg-white border rounded-xl shadow-sm h-full flex flex-col items-center justify-center p-12 text-center text-gray-400">
                   <FileSearch size={64} className="mb-4 opacity-50 text-indigo-300" />
                   <h3 className="text-xl font-bold text-gray-700 mb-2">Select a Job</h3>
-                  <p className="max-w-md">Choose a job from the sidebar to view its applicant pipeline, filter candidates, and review resumes.</p>
+                  <p className="max-w-md">Choose a job from the sidebar to view its applicant pipeline, filter candidates, and update their statuses.</p>
                </div>
              )}
+           </div>
+        </div>
+      )}
+
+      {/* Interview Scheduling Modal */}
+      {showInterviewModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+           <div className="bg-white rounded-xl shadow-xl max-w-sm w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">Schedule Interview</h3>
+              <p className="text-sm text-gray-600 mb-4">Set up an interview for {showInterviewModal.student?.firstName}.</p>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Interview Type</label>
+                  <select 
+                    className="w-full border rounded p-2 text-sm" 
+                    value={interviewDetails.type} 
+                    onChange={e => setInterviewDetails({...interviewDetails, type: e.target.value})}
+                  >
+                    <option>Technical</option>
+                    <option>HR</option>
+                    <option>System Design</option>
+                    <option>Culture Fit</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-gray-700 mb-1">Date & Time</label>
+                  <input 
+                    type="datetime-local" 
+                    className="w-full border rounded p-2 text-sm" 
+                    value={interviewDetails.scheduledAt} 
+                    onChange={e => setInterviewDetails({...interviewDetails, scheduledAt: e.target.value})} 
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                 <button onClick={() => setShowInterviewModal(null)} className="flex-1 bg-gray-100 text-gray-700 py-2 rounded font-medium hover:bg-gray-200">Cancel</button>
+                 <button 
+                   onClick={() => handleUpdateStatus(showInterviewModal.id, 'INTERVIEW', interviewDetails)} 
+                   disabled={!interviewDetails.scheduledAt}
+                   className="flex-1 bg-indigo-600 text-white py-2 rounded font-bold hover:bg-indigo-700 disabled:opacity-50"
+                 >
+                   Schedule
+                 </button>
+              </div>
            </div>
         </div>
       )}
     </div>
   );
 };
-
