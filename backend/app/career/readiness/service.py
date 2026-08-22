@@ -2,10 +2,80 @@ from sqlalchemy.orm import Session
 from .models import CareerReadinessScore
 from .schemas import CareerReadinessResponse, ComponentScore
 
+WEIGHTS = {
+    "CODING": 0.25,
+    "APTITUDE": 0.15,
+    "TECHNICAL": 0.15,
+    "COMMUNICATION": 0.10,
+    "INTERVIEW": 0.15,
+    "RESUME": 0.10,
+    "PROJECTS": 0.10
+}
+
 class CareerReadinessService:
     @staticmethod
     def get_latest_score(db: Session, student_id: str) -> CareerReadinessScore:
         return db.query(CareerReadinessScore).filter(CareerReadinessScore.student_id == student_id).order_by(CareerReadinessScore.created_at.desc()).first()
+
+    @staticmethod
+    def update_component(db: Session, student_id: str, component: str, percentage: float):
+        latest = CareerReadinessService.get_latest_score(db, student_id)
+        
+        # We always create a new historical record instead of mutating
+        new_record = CareerReadinessScore(
+            student_id=student_id,
+            coding_score=latest.coding_score if latest else None,
+            aptitude_score=latest.aptitude_score if latest else None,
+            technical_score=latest.technical_score if latest else None,
+            communication_score=latest.communication_score if latest else None,
+            interview_score=latest.interview_score if latest else None,
+            resume_score=latest.resume_score if latest else None,
+            projects_score=latest.projects_score if latest else None,
+            overall_score=latest.overall_score if latest else 0.0
+        )
+        
+        comp_upper = component.upper()
+        if comp_upper == "CODING": new_record.coding_score = percentage
+        elif comp_upper == "APTITUDE": new_record.aptitude_score = percentage
+        elif comp_upper == "TECHNICAL": new_record.technical_score = percentage
+        elif comp_upper == "COMMUNICATION": new_record.communication_score = percentage
+        elif comp_upper == "INTERVIEW": new_record.interview_score = percentage
+        elif comp_upper == "RESUME": new_record.resume_score = percentage
+        elif comp_upper == "PROJECTS": new_record.projects_score = percentage
+
+        # Calculate weighted overall score
+        total_weight = 0.0
+        weighted_sum = 0.0
+        
+        if new_record.coding_score is not None:
+            total_weight += WEIGHTS["CODING"]
+            weighted_sum += new_record.coding_score * WEIGHTS["CODING"]
+        if new_record.aptitude_score is not None:
+            total_weight += WEIGHTS["APTITUDE"]
+            weighted_sum += new_record.aptitude_score * WEIGHTS["APTITUDE"]
+        if new_record.technical_score is not None:
+            total_weight += WEIGHTS["TECHNICAL"]
+            weighted_sum += new_record.technical_score * WEIGHTS["TECHNICAL"]
+        if new_record.communication_score is not None:
+            total_weight += WEIGHTS["COMMUNICATION"]
+            weighted_sum += new_record.communication_score * WEIGHTS["COMMUNICATION"]
+        if new_record.interview_score is not None:
+            total_weight += WEIGHTS["INTERVIEW"]
+            weighted_sum += new_record.interview_score * WEIGHTS["INTERVIEW"]
+        if new_record.resume_score is not None:
+            total_weight += WEIGHTS["RESUME"]
+            weighted_sum += new_record.resume_score * WEIGHTS["RESUME"]
+        if new_record.projects_score is not None:
+            total_weight += WEIGHTS["PROJECTS"]
+            weighted_sum += new_record.projects_score * WEIGHTS["PROJECTS"]
+
+        if total_weight > 0:
+            new_record.overall_score = weighted_sum / total_weight
+        else:
+            new_record.overall_score = 0.0
+
+        db.add(new_record)
+        db.commit()
 
     @staticmethod
     def calculate(db: Session, student_id: str) -> CareerReadinessResponse:
