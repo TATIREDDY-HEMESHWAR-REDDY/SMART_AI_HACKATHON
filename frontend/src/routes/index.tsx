@@ -9,6 +9,9 @@ import AssessmentAttempt from '@/pages/career/aptitude/AssessmentAttempt';
 import AssessmentResult from '@/pages/career/aptitude/AssessmentResult';
 import AssessmentReview from '@/pages/career/aptitude/AssessmentReview';
 
+import TechnicalDashboard from '@/pages/career/technical/TechnicalDashboard';
+import CommunicationDashboard from '@/pages/career/communication/CommunicationDashboard';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -23,12 +26,14 @@ export default function AppRoutes() {
         
         {/* Aptitude & Assessments */}
         <Route path="aptitude" element={<AptitudeDashboard />} />
+        <Route path="technical" element={<TechnicalDashboard />} />
+        <Route path="communication" element={<CommunicationDashboard />} />
+        
         <Route path="assessments/:id" element={<AssessmentDetails />} />
         <Route path="attempts/:id/result" element={<AssessmentResult />} />
         <Route path="assessments/review/:id" element={<AssessmentReview />} />
         
         {/* Placeholders for future phases */}
-        <Route path="assessments" element={<div className="p-4">Assessments Module (Phase 3)</div>} />
         <Route path="coding" element={<div className="p-4">Coding Module (Phase 4)</div>} />
         <Route path="resume" element={<div className="p-4">Resume Module (Phase 5)</div>} />
         <Route path="jobs" element={<div className="p-4">Jobs Module (Phase 7)</div>} />

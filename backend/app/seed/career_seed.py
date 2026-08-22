@@ -178,6 +178,103 @@ def seed_career_data():
             db.add_all([q4, q5])
             db.commit()
 
+
+        # Technical Assessment
+        if not db.query(Assessment).filter_by(category="TECHNICAL").first():
+            print("Seeding Technical assessments...")
+            tech_assm = Assessment(
+                title="DBMS Fundamentals",
+                description="Test your knowledge of Database Management Systems, Normalization, and SQL.",
+                category="TECHNICAL",
+                topic="DBMS",
+                difficulty="MEDIUM",
+                duration_minutes=15,
+                total_questions=2,
+                passing_score=50.0
+            )
+            db.add(tech_assm)
+            db.flush()
+
+            q_tech1 = AssessmentQuestion(
+                assessment_id=tech_assm.id,
+                question_text="Which normal form ensures that there are no transitive dependencies?",
+                explanation="3rd Normal Form (3NF) is designed to ensure that there are no transitive dependencies of non-prime attributes on the primary key.",
+                topic="Normalization",
+                difficulty="MEDIUM",
+                options=[
+                    {"id": "A", "text": "1NF"},
+                    {"id": "B", "text": "2NF"},
+                    {"id": "C", "text": "3NF"},
+                    {"id": "D", "text": "BCNF"}
+                ],
+                correct_option_id="C"
+            )
+
+            q_tech2 = AssessmentQuestion(
+                assessment_id=tech_assm.id,
+                question_text="What is the difference between TRUNCATE and DELETE in SQL?",
+                explanation="TRUNCATE is a DDL command that removes all rows from a table and cannot be rolled back in some databases, while DELETE is a DML command that removes specified rows and can be rolled back.",
+                topic="SQL",
+                difficulty="EASY",
+                options=[
+                    {"id": "A", "text": "TRUNCATE is DML, DELETE is DDL"},
+                    {"id": "B", "text": "TRUNCATE removes table structure, DELETE does not"},
+                    {"id": "C", "text": "TRUNCATE is DDL (usually cannot be rolled back), DELETE is DML (can be rolled back)"},
+                    {"id": "D", "text": "There is no difference"}
+                ],
+                correct_option_id="C"
+            )
+            db.add_all([q_tech1, q_tech2])
+
+        # Communication Assessment
+        if not db.query(Assessment).filter_by(category="COMMUNICATION").first():
+            print("Seeding Communication assessments...")
+            comm_assm = Assessment(
+                title="Professional Communication",
+                description="Evaluate your workplace communication and email writing skills.",
+                category="COMMUNICATION",
+                topic="Professional Communication",
+                difficulty="EASY",
+                duration_minutes=10,
+                total_questions=2,
+                passing_score=50.0
+            )
+            db.add(comm_assm)
+            db.flush()
+
+            q_comm1 = AssessmentQuestion(
+                assessment_id=comm_assm.id,
+                question_text="Which of the following is the most appropriate closing for a formal email to a prospective employer?",
+                explanation="'Sincerely' is the standard, professional closing for formal business correspondence.",
+                topic="Business English",
+                difficulty="EASY",
+                options=[
+                    {"id": "A", "text": "Cheers,"},
+                    {"id": "B", "text": "Talk soon,"},
+                    {"id": "C", "text": "Sincerely,"},
+                    {"id": "D", "text": "Later,"}
+                ],
+                correct_option_id="C"
+            )
+
+            q_comm2 = AssessmentQuestion(
+                assessment_id=comm_assm.id,
+                question_text="Identify the grammatically correct sentence:",
+                explanation="'The team is working on its project' uses the singular pronoun 'its' to match the collective noun 'team'.",
+                topic="Grammar",
+                difficulty="MEDIUM",
+                options=[
+                    {"id": "A", "text": "The team are working on their project."},
+                    {"id": "B", "text": "The team is working on its project."},
+                    {"id": "C", "text": "The team is working on their project."},
+                    {"id": "D", "text": "The teams is working on its project."}
+                ],
+                correct_option_id="B"
+            )
+            db.add_all([q_comm1, q_comm2])
+            
+        db.commit()
+
         print("Career seeding complete.")
     except Exception as e:
         print(f"Error seeding: {e}")
@@ -187,3 +284,4 @@ def seed_career_data():
 
 if __name__ == "__main__":
     seed_career_data()
+

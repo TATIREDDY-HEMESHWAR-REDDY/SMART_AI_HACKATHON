@@ -1,12 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
 import { assessmentService } from '@/services/assessmentService';
 import { AssessmentCard } from '@/components/career/assessments/AssessmentCard';
-import { BrainCircuit } from 'lucide-react';
+import { Code2 } from 'lucide-react';
 
-export default function AptitudeDashboard() {
+export default function TechnicalDashboard() {
   const { data: assessments, isLoading } = useQuery({
-    queryKey: ['assessments', 'APTITUDE'],
-    queryFn: () => assessmentService.getAssessments('APTITUDE'),
+    queryKey: ['assessments', 'TECHNICAL'],
+    queryFn: () => assessmentService.getAssessments('TECHNICAL'),
   });
 
   if (isLoading) {
@@ -17,11 +17,11 @@ export default function AptitudeDashboard() {
     <div className="max-w-6xl mx-auto space-y-8">
       <div>
         <h2 className="text-3xl font-bold text-gray-900 tracking-tight flex items-center">
-          <BrainCircuit className="w-8 h-8 mr-3 text-blue-600" />
-          Aptitude Practice
+          <Code2 className="w-8 h-8 mr-3 text-blue-600" />
+          Technical Assessments
         </h2>
         <p className="text-gray-500 mt-2 text-lg">
-          Master quantitative, logical, and verbal skills to ace your placement tests.
+          Evaluate your core computer science knowledge and software engineering principles.
         </p>
       </div>
 
@@ -29,6 +29,11 @@ export default function AptitudeDashboard() {
         {assessments?.map((assessment: any) => (
           <AssessmentCard key={assessment.id} assessment={assessment} />
         ))}
+        {assessments?.length === 0 && (
+          <div className="col-span-full text-center p-12 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            <p className="text-gray-500">No technical assessments available yet.</p>
+          </div>
+        )}
       </div>
     </div>
   );

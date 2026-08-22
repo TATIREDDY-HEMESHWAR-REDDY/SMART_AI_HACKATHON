@@ -8,7 +8,8 @@ import {
   Map, 
   Bot, 
   Activity,
-  Target
+  Target,
+  MessageSquare
 } from 'lucide-react';
 import { useStudent } from '@/contexts/StudentContext';
 
@@ -16,6 +17,8 @@ const navigation = [
   { name: 'Dashboard', href: '/career', icon: LayoutDashboard },
   { name: 'Profile', href: '/career/profile', icon: User },
   { name: 'Aptitude', href: '/career/aptitude', icon: Target },
+  { name: 'Technical', href: '/career/technical', icon: Code2 },
+  { name: 'Communication', href: '/career/communication', icon: MessageSquare },
   { name: 'Coding', href: '/career/coding', icon: Code2 },
   { name: 'Resume', href: '/career/resume', icon: FileText },
   { name: 'Jobs', href: '/career/jobs', icon: Briefcase },
