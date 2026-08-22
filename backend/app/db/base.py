@@ -7,3 +7,4 @@ from app.career.readiness.models import CareerReadinessScore
 from app.career.progress.models import CareerProgress
 from app.career.ai_insights.models import AIInsight
 from app.career.assessments.models import Assessment, AssessmentQuestion, AssessmentAttempt, AssessmentAnswer
+from app.career.coding.models import CodingProblem, CodingTestCase, CodingSubmission, CodingProgress
