@@ -183,4 +183,31 @@ export default async function placementRoutes(server: FastifyInstance) {
       return { success: true, data: { applications } };
     }
   });
+  server.patch('/applications/:id/withdraw', {
+    preHandler: [server.requireRole(['STUDENT'])],
+    handler: async (request: any, reply) => {
+      const { id } = request.params;
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      const profile = await prisma.studentProfile.findUnique({ where: { userId: request.user.id } });
+      if (!profile) return reply.status(404).send({ success: false, message: 'Profile not found' });
+
+      const application = await prisma.jobApplication.findUnique({ where: { id } });
+      if (!application || application.studentId !== profile.id) {
+        return reply.status(404).send({ success: false, message: 'Application not found' });
+      }
+
+      if (application.status !== 'APPLIED' && application.status !== 'UNDER_REVIEW') {
+        return reply.status(400).send({ success: false, message: 'Cannot withdraw an application that is already processed.' });
+      }
+
+      const updated = await prisma.jobApplication.update({
+        where: { id },
+        data: { status: 'WITHDRAWN' }
+      });
+      
+      return { success: true, data: { application: updated } };
+    }
+  });
 }

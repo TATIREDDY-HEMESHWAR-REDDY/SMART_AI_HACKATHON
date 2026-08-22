@@ -21,6 +21,8 @@ export const PlacementDrive = () => {
   const [drives, setDrives] = useState<any[]>([]);
   const [jobs, setJobs] = useState<any[]>([]);
   const [applications, setApplications] = useState<any[]>([]);
+  const [resumes, setResumes] = useState<any[]>([]);
+  const [selectedResume, setSelectedResume] = useState('');
   const [eligibilityResult, setEligibilityResult] = useState<any>(null);
   const [selectedJob, setSelectedJob] = useState<string | null>(null);
 
@@ -40,6 +42,7 @@ export const PlacementDrive = () => {
       ];
       if (isStudent) {
          reqs.push(fetch('http://localhost:3000/api/v1/placement/applications/me', { headers }));
+         reqs.push(fetch('http://localhost:3000/api/v1/career/resume/me', { headers }));
       }
       const responses = await Promise.all(reqs);
       
@@ -54,6 +57,15 @@ export const PlacementDrive = () => {
       if (isStudent && responses[3]) {
          const appData = await responses[3].json();
          if (appData.success) setApplications(appData.data.applications);
+      }
+      if (isStudent && responses[4]) {
+         const resData = await responses[4].json();
+         if (resData.success) {
+           setResumes(resData.data.resumes || []);
+           const prim = resData.data.resumes?.find((r: any) => r.isPrimary);
+           if (prim) setSelectedResume(prim.id);
+           else if (resData.data.resumes?.length > 0) setSelectedResume(resData.data.resumes[0].id);
+         }
       }
     } catch (e) {
       console.error(e);
@@ -180,7 +192,7 @@ export const PlacementDrive = () => {
       const res = await fetch(`http://localhost:3000/api/v1/placement/jobs/${jobId}/apply`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` },
-        body: JSON.stringify({}) // Uses primary resume automatically
+        body: JSON.stringify({ resumeId: selectedResume || undefined })
       });
       const data = await res.json();
       if (data.success) {
@@ -192,6 +204,35 @@ export const PlacementDrive = () => {
         setErrorMsg('Failed to apply: ' + data.message);
       }
     } catch(e) { console.error(e); }
+  };
+
+  const handleWithdraw = async (applicationId: string) => {
+    if (!confirm('Are you sure you want to withdraw this application?')) return;
+    try {
+      const res = await fetch(`http://localhost:3000/api/v1/placement/applications/${applicationId}/withdraw`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSuccessMsg('Application withdrawn successfully.');
+        fetchData();
+      } else {
+        setErrorMsg('Withdrawal failed: ' + data.message);
+      }
+    } catch(e) { console.error(e); }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'APPLIED': return 'bg-blue-100 text-blue-800';
+      case 'UNDER_REVIEW': return 'bg-yellow-100 text-yellow-800';
+      case 'SHORTLISTED': return 'bg-purple-100 text-purple-800';
+      case 'SELECTED': return 'bg-green-100 text-green-800';
+      case 'REJECTED': return 'bg-red-100 text-red-800';
+      case 'WITHDRAWN': return 'bg-gray-200 text-gray-700';
+      default: return 'bg-gray-100 text-gray-800';
+    }
   };
 
   return (
@@ -262,12 +303,17 @@ export const PlacementDrive = () => {
                   <h3 className="text-xl font-semibold text-gray-800 mb-4">My Applications</h3>
                   <div className="space-y-3">
                      {applications.map(app => (
-                        <div key={app.id} className="flex justify-between items-center p-4 border rounded-lg bg-gray-50">
+                        <div key={app.id} className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 border rounded-lg bg-gray-50 gap-4">
                            <div>
                              <h4 className="font-bold text-gray-800">{app.job?.title}</h4>
                              <p className="text-sm text-gray-500">{app.job?.drive?.company?.name}</p>
                            </div>
-                           <span className="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-bold rounded-full uppercase tracking-wider">{app.status}</span>
+                           <div className="flex items-center space-x-4">
+                             <span className={`px-3 py-1 text-xs font-bold rounded-full uppercase tracking-wider ${getStatusColor(app.status)}`}>{app.status}</span>
+                             {(app.status === 'APPLIED' || app.status === 'UNDER_REVIEW') && (
+                               <button onClick={() => handleWithdraw(app.id)} className="text-red-600 hover:text-red-800 text-sm font-medium">Withdraw</button>
+                             )}
+                           </div>
                         </div>
                      ))}
                   </div>
@@ -295,12 +341,28 @@ export const PlacementDrive = () => {
                        <p className="text-sm text-gray-500">No specific eligibility rules required for this job.</p>
                      )}
                   </div>
-                  <div className="flex gap-3 mt-8">
+
+                  {eligibilityResult.isEligible && (
+                    <div className="mb-6 pt-4 border-t">
+                      <label className="block text-sm font-bold text-gray-700 mb-2">Select Resume to Submit</label>
+                      {resumes.length > 0 ? (
+                        <select className="w-full border rounded-lg p-2 text-sm" value={selectedResume} onChange={(e) => setSelectedResume(e.target.value)}>
+                          {resumes.map(r => (
+                            <option key={r.id} value={r.id}>{r.fileName || 'Resume'} {r.isPrimary ? '(Primary)' : ''}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <p className="text-sm text-red-600">No resumes found. Please upload one in the Career section.</p>
+                      )}
+                    </div>
+                  )}
+
+                  <div className="flex gap-3 mt-4">
                      <button onClick={() => setEligibilityResult(null)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-lg font-medium hover:bg-gray-200 transition-colors">Cancel</button>
                      <button 
                        onClick={() => applyForJob(selectedJob!)}
-                       disabled={!eligibilityResult.isEligible} 
-                       className={`flex-1 py-2.5 rounded-lg font-bold text-white transition-colors ${eligibilityResult.isEligible ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-300 cursor-not-allowed'}`}
+                       disabled={!eligibilityResult.isEligible || (eligibilityResult.isEligible && resumes.length === 0)} 
+                       className={`flex-1 py-2.5 rounded-lg font-bold text-white transition-colors ${eligibilityResult.isEligible && resumes.length > 0 ? 'bg-indigo-600 hover:bg-indigo-700' : 'bg-gray-300 cursor-not-allowed'}`}
                      >
                        {eligibilityResult.isEligible ? 'Submit Application' : 'Not Eligible'}
                      </button>
