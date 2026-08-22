@@ -8,3 +8,8 @@ from app.career.progress.models import CareerProgress
 from app.career.ai_insights.models import AIInsight
 from app.career.assessments.models import Assessment, AssessmentQuestion, AssessmentAttempt, AssessmentAnswer
 from app.career.coding.models import CodingProblem, CodingTestCase, CodingSubmission, CodingProgress
+from app.career.resume.models import (
+    Resume, ResumeEducation, ResumeExperience, ResumeProject, 
+    ResumeSkill, ResumeCertification, ResumeAchievement, 
+    ResumeActivity, ResumeAnalysis
+)

@@ -14,6 +14,7 @@ import CommunicationDashboard from '@/pages/career/communication/CommunicationDa
 
 import CodingDashboard from '@/pages/career/coding/CodingDashboard';
 import ProblemWorkspace from '@/pages/career/coding/ProblemWorkspace';
+import ResumeBuilder from '@/pages/career/resume/ResumeBuilder';
 
 export default function AppRoutes() {
   return (
@@ -39,7 +40,7 @@ export default function AppRoutes() {
         <Route path="assessments/review/:id" element={<AssessmentReview />} />
         
         {/* Placeholders for future phases */}
-        <Route path="resume" element={<div className="p-4">Resume Module (Phase 5)</div>} />
+        <Route path="resume" element={<ResumeBuilder />} />
         <Route path="jobs" element={<div className="p-4">Jobs Module (Phase 7)</div>} />
         <Route path="roadmap" element={<div className="p-4">Roadmap Module (Phase 8)</div>} />
         <Route path="coach" element={<div className="p-4">AI Coach Module (Phase 8)</div>} />

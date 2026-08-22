@@ -9,6 +9,7 @@ from app.career.progress.router import router as progress_router
 from app.career.dashboard.router import router as dashboard_router
 from app.career.assessments.router import router as assessments_router
 from app.career.coding.router import router as coding_router
+from app.career.resume.router import router as resume_router
 
 api_router.include_router(dashboard_router, prefix="/career", tags=["Career Dashboard"])
 api_router.include_router(profile_router, prefix="/career/profile", tags=["Career Profile"])
