@@ -2,6 +2,44 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 export const PlacementData = {
+  getRecruiterJobs: async (userId: string) => {
+    const recruiter = await prisma.recruiter.findUnique({ where: { userId } });
+    if (!recruiter || !recruiter.isVerified) throw new Error('Unauthorized or pending verification');
+    
+    return prisma.placementDrive.findMany({
+      where: { companyId: recruiter.companyId },
+      include: { 
+        jobs: { 
+          include: { 
+            _count: { select: { applications: true } } 
+          } 
+        } 
+      },
+      orderBy: { registrationDeadline: 'desc' }
+    });
+  },
+
+  getJobApplicants: async (userId: string, jobId: string) => {
+    const recruiter = await prisma.recruiter.findUnique({ where: { userId } });
+    if (!recruiter || !recruiter.isVerified) throw new Error('Unauthorized or pending verification');
+
+    const job = await prisma.job.findUnique({ where: { id: jobId }, include: { drive: true } });
+    if (!job || job.drive.companyId !== recruiter.companyId) throw new Error('Unauthorized access to this job');
+
+    return prisma.jobApplication.findMany({
+      where: { jobId },
+      include: {
+        student: { 
+          include: { 
+            user: { select: { email: true } }, 
+            program: true 
+          } 
+        },
+        resume: true
+      },
+      
+    });
+  },
   createCompany: async (data: any) => {
     return prisma.company.create({
       data: {
@@ -154,3 +192,5 @@ export const PlacementData = {
     return { isEligible, criteria };
   }
 };
+
+

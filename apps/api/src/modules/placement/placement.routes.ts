@@ -236,4 +236,27 @@ export default async function placementRoutes(server: FastifyInstance) {
       return { success: true, data: { recruiter } };
     }
   });
+  server.get('/recruiters/me/drives', {
+    preHandler: [server.requireRole(['RECRUITER'])],
+    handler: async (request: any, reply) => {
+      try {
+        const drives = await PlacementData.getRecruiterJobs(request.user.id);
+        return { success: true, data: { drives } };
+      } catch (err: any) {
+        return reply.status(403).send({ success: false, message: err.message });
+      }
+    }
+  });
+
+  server.get('/recruiters/me/jobs/:jobId/applicants', {
+    preHandler: [server.requireRole(['RECRUITER'])],
+    handler: async (request: any, reply) => {
+      try {
+        const applications = await PlacementData.getJobApplicants(request.user.id, request.params.jobId);
+        return { success: true, data: { applications } };
+      } catch (err: any) {
+        return reply.status(403).send({ success: false, message: err.message });
+      }
+    }
+  });
 }
