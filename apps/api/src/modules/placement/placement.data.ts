@@ -42,7 +42,7 @@ export const PlacementData = {
       });
     }
 
-    if (status === 'SELECTED' && details?.offerLetterUrl) {
+        if (status === 'SELECTED' && details?.offerLetterUrl) {
       await prisma.selectionResult.upsert({
          where: { applicationId },
          create: { applicationId, offerLetterUrl: details.offerLetterUrl },
@@ -50,6 +50,19 @@ export const PlacementData = {
       });
     }
     
+        // Notify Candidate (Module U integration)
+    const studentProf = await prisma.studentProfile.findUnique({ where: { id: application.studentId } });
+    if (studentProf) {
+      await prisma.notification.create({
+        data: {
+          userId: studentProf.userId,
+          title: 'Application Status Update',
+          message: 'Your application for ' + application.job.title + ' in ' + application.job.drive.title + ' has been updated to: ' + status,
+          type: 'ALERT'
+        }
+      });
+    }
+
     return prisma.jobApplication.update({
       where: { id: applicationId },
       data: { status }
@@ -228,6 +241,9 @@ export const PlacementData = {
     return { isEligible, criteria };
   }
 };
+
+
+
 
 
 
