@@ -20,7 +20,7 @@ async def get_current_student_id():
         raise HTTPException(status_code=401, detail="Not authenticated")
     return student.id
 
-@router.post("/", response_model=InterviewSessionResponse)
+@router.post("", response_model=InterviewSessionResponse)
 async def start_interview(
     setup: CreateInterview,
     db: Session = Depends(get_db),
@@ -30,7 +30,7 @@ async def start_interview(
         raise HTTPException(status_code=401, detail="Not authenticated")
     return await InterviewService.create_session(db, student_id, setup)
 
-@router.get("/", response_model=List[InterviewHistoryItem])
+@router.get("", response_model=List[InterviewHistoryItem])
 def list_interviews(
     db: Session = Depends(get_db),
     student_id: str = Depends(get_current_student_id)

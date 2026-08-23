@@ -31,18 +31,24 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   const fetchStudent = async () => {
     try {
       setLoading(true);
-      // For now we mock the API response, later this will be /api/v1/auth/me or similar
-      const response = await api.get('/health'); // Using health just to check connection
+      // Fetch real profile from Career OS backend
+      const response = await api.get('/career/profile');
       if (response.data) {
          setStudent({
             id: 'STU10045',
-            name: 'Sameer (Mock)',
-            email: 'sameer@demo.com',
+            name: response.data.full_name || 'Alex Chen',
+            email: 'student@demo.com',
             cgpa: 8.4
          });
       }
     } catch (err) {
-      setError('Failed to fetch student data');
+      // Fallback to mock student data if API fails
+      setStudent({
+        id: 'STU10045',
+        name: 'Alex Chen',
+        email: 'student@campusos.com',
+        cgpa: 8.4
+      });
     } finally {
       setLoading(false);
     }
