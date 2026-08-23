@@ -881,13 +881,14 @@ const CAREER_OS_URL = process.env.NEXT_PUBLIC_CAREER_OS_URL || 'http://localhost
 function CareerPortalPage({ user, data }: { user: User; data: Overview }) {
   // Encode the full ERP student profile so Career OS has real seed data.
   // erp_data = base64(JSON) containing skills, profile fields, opportunities.
-  const erpPayload = btoa(JSON.stringify({
+  // Unicode-safe base64: encodeURIComponent handles non-Latin1 chars before btoa
+  const erpPayload = btoa(encodeURIComponent(JSON.stringify({
     skills: data.skills,
     targetRole: data.profile?.targetRole ?? '',
     github: data.profile?.github ?? '',
     linkedin: data.profile?.linkedin ?? '',
     opportunities: data.opportunities,
-  }));
+  })));
 
   const params = new URLSearchParams({
     erp_session: '1',

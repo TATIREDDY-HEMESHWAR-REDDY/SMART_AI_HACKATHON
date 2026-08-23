@@ -56,7 +56,7 @@ function parseERPParams(): { student: Student; authorized: true } | null {
   const raw = p.get('erp_data');
   if (raw) {
     try {
-      erpProfile = JSON.parse(atob(raw));
+      erpProfile = JSON.parse(decodeURIComponent(atob(raw)));
     } catch {
       // malformed — ignore, still allow access since erp_session=1
     }
