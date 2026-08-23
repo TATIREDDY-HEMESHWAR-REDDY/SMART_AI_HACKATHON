@@ -22,6 +22,9 @@ import InterviewSession from '@/pages/career/interview/InterviewSession';
 import InterviewReview from '@/pages/career/interview/InterviewReview';
 import InterviewHistory from '@/pages/career/interview/InterviewHistory';
 
+import JobsDashboard from '@/pages/career/jobs/JobsDashboard';
+import JobDetails from '@/pages/career/jobs/JobDetails';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -55,7 +58,10 @@ export default function AppRoutes() {
         <Route path="interview/history" element={<InterviewHistory />} />
         <Route path="interview/:id/review" element={<InterviewReview />} />
 
-        <Route path="jobs" element={<div className="p-4">Jobs Module (Phase 7)</div>} />
+        {/* Jobs Module */}
+        <Route path="jobs" element={<JobsDashboard />} />
+        <Route path="jobs/:id" element={<JobDetails />} />
+
         <Route path="roadmap" element={<div className="p-4">Roadmap Module (Phase 8)</div>} />
         <Route path="coach" element={<div className="p-4">AI Coach Module (Phase 8)</div>} />
         <Route path="analytics" element={<div className="p-4">Analytics Module (Phase 8)</div>} />
