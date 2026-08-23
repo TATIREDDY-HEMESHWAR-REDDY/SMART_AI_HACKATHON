@@ -879,11 +879,23 @@ function ComingSoon({ title }: { title: string }) { return <div className="comin
 const CAREER_OS_URL = process.env.NEXT_PUBLIC_CAREER_OS_URL || 'http://localhost:5173';
 
 function CareerPortalPage({ user, data }: { user: User; data: Overview }) {
+  // Encode the full ERP student profile so Career OS has real seed data.
+  // erp_data = base64(JSON) containing skills, profile fields, opportunities.
+  const erpPayload = btoa(JSON.stringify({
+    skills: data.skills,
+    targetRole: data.profile?.targetRole ?? '',
+    github: data.profile?.github ?? '',
+    linkedin: data.profile?.linkedin ?? '',
+    opportunities: data.opportunities,
+  }));
+
   const params = new URLSearchParams({
+    erp_session: '1',
     name: user.fullName,
     section: user.section || '',
     cgpa: String(data.academics.cgpa),
     semester: String(data.academics.semester),
+    erp_data: erpPayload,
   });
   const careerUrl = `${CAREER_OS_URL}/career?${params.toString()}`;
 

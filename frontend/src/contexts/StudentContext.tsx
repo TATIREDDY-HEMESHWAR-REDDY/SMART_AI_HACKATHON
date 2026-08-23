@@ -1,95 +1,118 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
-import { api } from '@/services/api';
+
+export interface ERPSkill {
+  id: number;
+  name: string;
+  level: string;
+  score: number;
+}
+
+export interface ERPOpportunity {
+  company: string;
+  role: string;
+  package: string;
+  matchScore: number;
+  deadline: string;
+  gap: string;
+}
+
+export interface ERPProfile {
+  targetRole: string;
+  github: string;
+  linkedin: string;
+  skills: ERPSkill[];
+  opportunities: ERPOpportunity[];
+}
 
 export interface Student {
   id: string;
   name: string;
   email: string;
-  department?: { id: number; name: string };
-  year?: number;
-  semester?: number;
   section?: string;
+  semester?: number;
   cgpa?: number;
-  profile_picture?: string;
+  erpProfile?: ERPProfile;
 }
 
 interface StudentContextType {
   student: Student | null;
   loading: boolean;
-  error: string | null;
+  authorized: boolean;
   fetchStudent: () => Promise<void>;
 }
 
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
 
-// Read student identity passed as URL params from the CampusOS ERP.
-// URL shape: /career?name=John+Doe&section=A1&cgpa=8.4&semester=4
-function readERPParams(): Partial<Student> | null {
-  const params = new URLSearchParams(window.location.search);
-  const name = params.get('name');
-  if (!name) return null;
+const SESSION_KEY = 'career_os_session';
+
+function parseERPParams(): { student: Student; authorized: true } | null {
+  const p = new URLSearchParams(window.location.search);
+  if (p.get('erp_session') !== '1') return null;
+
+  const name = p.get('name') ?? 'Student';
+
+  let erpProfile: ERPProfile | undefined;
+  const raw = p.get('erp_data');
+  if (raw) {
+    try {
+      erpProfile = JSON.parse(atob(raw));
+    } catch {
+      // malformed — ignore, still allow access since erp_session=1
+    }
+  }
+
   return {
-    name,
-    section: params.get('section') ?? undefined,
-    cgpa: params.get('cgpa') ? Number(params.get('cgpa')) : undefined,
-    semester: params.get('semester') ? Number(params.get('semester')) : undefined,
+    authorized: true,
+    student: {
+      id: 'erp-student',
+      email: '',
+      name,
+      section: p.get('section') ?? undefined,
+      cgpa: p.get('cgpa') ? Number(p.get('cgpa')) : undefined,
+      semester: p.get('semester') ? Number(p.get('semester')) : undefined,
+      erpProfile,
+    },
   };
 }
-
-const ERP_STUDENT_KEY = 'career_os_erp_student';
 
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [authorized, setAuthorized] = useState(false);
 
   const fetchStudent = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      // 1 · ERP handoff via URL params (takes priority)
-      const erpParams = readERPParams();
-      if (erpParams) {
-        const erp: Student = {
-          id: 'erp-student',
-          email: '',
-          name: erpParams.name ?? 'Student',
-          section: erpParams.section,
-          cgpa: erpParams.cgpa,
-          semester: erpParams.semester,
-        };
-        setStudent(erp);
-        // Persist so navigating within Career OS keeps the identity
-        sessionStorage.setItem(ERP_STUDENT_KEY, JSON.stringify(erp));
+      // 1 · Fresh handoff from ERP via URL params
+      const fromERP = parseERPParams();
+      if (fromERP) {
+        setStudent(fromERP.student);
+        setAuthorized(true);
+        sessionStorage.setItem(SESSION_KEY, JSON.stringify(fromERP.student));
         return;
       }
 
-      // 2 · Already stored from a previous ERP handoff this session
-      const stored = sessionStorage.getItem(ERP_STUDENT_KEY);
+      // 2 · Already authenticated this session (page navigation within Career OS)
+      const stored = sessionStorage.getItem(SESSION_KEY);
       if (stored) {
         setStudent(JSON.parse(stored));
+        setAuthorized(true);
         return;
       }
 
-      // 3 · Fallback: check API connection then use mock
-      const response = await api.get('/health');
-      if (response.data) {
-        setStudent({ id: 'STU10045', name: 'Sameer (Mock)', email: 'sameer@demo.com', cgpa: 8.4 });
-      }
-    } catch (err) {
-      setError('Failed to fetch student data');
+      // 3 · Not from ERP — block access
+      setAuthorized(false);
+      setStudent(null);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchStudent();
-  }, []);
+  useEffect(() => { fetchStudent(); }, []);
 
   return (
-    <StudentContext.Provider value={{ student, loading, error, fetchStudent }}>
+    <StudentContext.Provider value={{ student, loading, authorized, fetchStudent }}>
       {children}
     </StudentContext.Provider>
   );
@@ -97,8 +120,6 @@ export function StudentProvider({ children }: { children: ReactNode }) {
 
 export function useStudent() {
   const context = useContext(StudentContext);
-  if (context === undefined) {
-    throw new Error('useStudent must be used within a StudentProvider');
-  }
+  if (context === undefined) throw new Error('useStudent must be used within a StudentProvider');
   return context;
 }

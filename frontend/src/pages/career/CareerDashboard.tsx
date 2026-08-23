@@ -9,7 +9,7 @@ import { Lightbulb, Code2, BrainCircuit, Users, Target, FileText, Briefcase } fr
 
 export default function CareerDashboard() {
   const { student } = useStudent();
-  
+
   const { data: dashboard, isLoading, error } = useQuery({
     queryKey: ['careerDashboard'],
     queryFn: careerService.getDashboard,
@@ -23,11 +23,23 @@ export default function CareerDashboard() {
     );
   }
 
-  if (error || !dashboard) {
-    return <div className="text-red-500">Failed to load dashboard.</div>;
-  }
+  // ERP profile takes precedence for skills and identity data.
+  // Readiness scores still come from Career OS API (those are their own assessment results).
+  const erpProfile = student?.erpProfile;
 
-  const { readiness, profile, ai_insight, top_skills } = dashboard;
+  const { readiness, profile, ai_insight, top_skills: apiSkills } = dashboard ?? {};
+
+  // Use ERP skills when available; fall back to Career OS API skills.
+  const top_skills = erpProfile?.skills?.length
+    ? erpProfile.skills.map(s => ({ id: s.id, name: s.name, category: s.level, level: s.level, score: s.score }))
+    : apiSkills;
+
+  // Profile completion: use ERP fields to derive a real number.
+  const erpCompletion = erpProfile
+    ? Math.round(
+        ([erpProfile.targetRole, erpProfile.github, erpProfile.linkedin].filter(Boolean).length / 3) * 100
+      )
+    : null;
 
   const componentIcons: Record<string, any> = {
     Coding: Code2,
@@ -149,12 +161,23 @@ export default function CareerDashboard() {
             <CardContent>
               <div className="flex items-end justify-between mb-2">
                 <span className="text-3xl font-bold text-gray-900">
-                  {profile?.completion_stats?.completion_percentage || 0}%
+                  {erpCompletion ?? profile?.completion_stats?.completion_percentage ?? 0}%
                 </span>
               </div>
-              <ProgressBar progress={profile?.completion_stats?.completion_percentage || 0} colorClass="bg-green-500" />
-              
-              {profile?.completion_stats?.missing_sections?.length > 0 && (
+              <ProgressBar progress={erpCompletion ?? profile?.completion_stats?.completion_percentage ?? 0} colorClass="bg-green-500" />
+
+              {erpProfile && (
+                <div className="mt-6">
+                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Missing Information</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {!erpProfile.github && <Badge variant="warning">GitHub</Badge>}
+                    {!erpProfile.linkedin && <Badge variant="warning">LinkedIn</Badge>}
+                    {!erpProfile.targetRole && <Badge variant="warning">Target Role</Badge>}
+                  </div>
+                </div>
+              )}
+
+              {!erpProfile && profile?.completion_stats?.missing_sections?.length > 0 && (
                 <div className="mt-6">
                   <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Missing Information</h4>
                   <div className="flex flex-wrap gap-2">
