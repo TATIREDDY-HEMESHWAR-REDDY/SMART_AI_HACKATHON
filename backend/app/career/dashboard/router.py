@@ -1,17 +1,11 @@
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.database import get_db
 from .schemas import CareerDashboardResponse
 from .service import DashboardService
-from app.students.context.service import student_context_service
+from app.career.deps import get_current_student_id
 
 router = APIRouter()
-
-async def get_current_student_id():
-    student = await student_context_service.get_current_student("mock_token")
-    if not student:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return student.id
 
 @router.get("/dashboard", response_model=CareerDashboardResponse)
 async def get_dashboard(

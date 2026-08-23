@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { currentUser, db } from '@/lib/db';
+import { generateJsonGroq } from '@/lib/groq';
 import { generateJson } from '@/lib/gemini';
 
 export const runtime = 'nodejs';
@@ -37,10 +38,27 @@ Return a JSON array of 3 to 5 insight objects. Each object must have exactly the
 Order by importance, most urgent first. Return ONLY the JSON array, no markdown.`;
 
   try {
-    const insights = await generateJson<Insight[]>(prompt);
-    return NextResponse.json({ insights, generatedAt: new Date().toISOString() });
+    let insights: Insight[];
+    let provider: string;
+    const errors: string[] = [];
+    try {
+      insights = await generateJsonGroq<Insight[]>(prompt);
+      provider = 'groq';
+    } catch (groqErr: any) {
+      errors.push(`Groq: ${groqErr.message}`);
+      try {
+        insights = await generateJson<Insight[]>(prompt);
+        provider = 'gemini';
+      } catch (geminiErr: any) {
+        errors.push(`Gemini: ${geminiErr.message}`);
+        console.error('AI insights generation failed (both providers):', errors);
+        return NextResponse.json({ error: 'AI insights are temporarily unavailable. Please try again in a minute.' }, { status: 502 });
+      }
+    }
+    const safeInsights = Array.isArray(insights) ? insights : [];
+    return NextResponse.json({ insights: safeInsights, provider, generatedAt: new Date().toISOString() });
   } catch (error: any) {
-    console.error('AI insights generation failed:', error, error?.cause);
-    return NextResponse.json({ error: `${error.message || 'Failed to generate insights.'}${error?.cause ? ` (${error.cause})` : ''}` }, { status: 502 });
+    console.error('AI insights generation failed:', error);
+    return NextResponse.json({ error: 'Something went wrong generating insights. Please try again.' }, { status: 502 });
   }
 }

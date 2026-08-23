@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { ResumeData } from "@/services/resumeService";
 import { resumeService } from '@/services/resumeService';
 import { Sparkles, AlertTriangle, CheckCircle, Briefcase } from 'lucide-react';
-
+import { toast } from '@/components/ui/Toast';
 
 interface AnalysisViewProps {
   resume: ResumeData;
@@ -11,14 +11,13 @@ interface AnalysisViewProps {
 
 export default function AnalysisView({ resume }: AnalysisViewProps) {
   const queryClient = useQueryClient();
-  const toast = (msg: any) => alert(msg.title || msg);
   const [jobDesc, setJobDesc] = useState('');
 
   const analyzeMutation = useMutation({
     mutationFn: () => resumeService.analyzeResume(resume.id!),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['resume', resume.id] });
-      toast({ title: 'Analysis Complete' });
+      toast('Analysis Complete');
     }
   });
 
@@ -26,7 +25,7 @@ export default function AnalysisView({ resume }: AnalysisViewProps) {
     mutationFn: () => resumeService.matchJob(resume.id!, jobDesc, 'Target Role'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['resume', resume.id] });
-      toast({ title: 'Job Match Complete' });
+      toast('Job Match Complete');
     }
   });
 

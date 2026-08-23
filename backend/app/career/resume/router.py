@@ -3,20 +3,14 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 
 from app.db.database import get_db
-from app.students.context.service import student_context_service
+from app.career.deps import get_current_student_id
 from .service import ResumeService
 from .schemas import (
-    ResumeOut, ResumeCreate, ResumeUpdate, 
+    ResumeOut, ResumeCreate, ResumeUpdate,
     ResumeAnalysisOut, JobMatchRequest
 )
 
 router = APIRouter()
-
-async def get_current_student_id():
-    student = await student_context_service.get_current_student("mock_token")
-    if not student:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return student.id
 
 @router.get("", response_model=List[ResumeOut])
 def get_resumes(

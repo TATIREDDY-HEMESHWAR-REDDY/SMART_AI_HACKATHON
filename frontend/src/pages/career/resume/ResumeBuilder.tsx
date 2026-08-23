@@ -9,14 +9,13 @@ import { careerService } from '@/services/careerService';
 import ResumePreview from './ResumePreview';
 import ResumeForm from './ResumeForm';
 import AnalysisView from './AnalysisView';
-
+import { toast } from '@/components/ui/Toast';
 
 export default function ResumeBuilder() {
   const [activeResumeId, setActiveResumeId] = useState<number | null>(null);
   const [activeTab, setActiveTab] = useState<'edit' | 'analyze'>('edit');
   const [isExporting, setIsExporting] = useState(false);
   const queryClient = useQueryClient();
-  const toast = (msg: any) => alert(msg.title || msg);
 
   const { data: resumes = [], isLoading: isLoadingResumes } = useQuery({
     queryKey: ['resumes'],
@@ -46,7 +45,7 @@ export default function ResumeBuilder() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['resumes'] });
       setActiveResumeId(data.id);
-      toast({ title: 'Resume created' });
+      toast('Resume created');
     }
   });
 
@@ -54,7 +53,7 @@ export default function ResumeBuilder() {
     mutationFn: (data: any) => resumeService.updateResume(activeResumeId!, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['resume', activeResumeId] });
-      toast({ title: 'Saved' });
+      toast('Saved');
     }
   });
 
@@ -63,7 +62,7 @@ export default function ResumeBuilder() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['resumes'] });
       setActiveResumeId(data.id);
-      toast({ title: 'Resume duplicated' });
+      toast('Resume duplicated');
     }
   });
 
@@ -72,7 +71,7 @@ export default function ResumeBuilder() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['resumes'] });
       setActiveResumeId(null);
-      toast({ title: 'Resume deleted' });
+      toast('Resume deleted');
     }
   });
 

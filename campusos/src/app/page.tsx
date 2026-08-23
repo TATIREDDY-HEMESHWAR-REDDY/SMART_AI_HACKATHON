@@ -4,7 +4,7 @@ import { FormEvent, useEffect, useState } from 'react';
 import { Activity, AlertTriangle, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, CheckCircle2, ChevronRight, Code2, GraduationCap, LayoutDashboard, LogOut, Menu, Sparkles, Users, Trash2, CreditCard, ShieldAlert, Heart, Home as HomeIcon, User2 } from 'lucide-react';
 import { Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
-type User = { username: string; role: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'WARDEN' | 'PARENT'; fullName: string; section?: string | null; mustResetPassword?: number };
+type User = { id: number; username: string; role: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'WARDEN' | 'PARENT'; fullName: string; section?: string | null; mustResetPassword?: number };
 type WeekSlot = { day: string; timeSlot: string; subject: string; classroom: string };
 type Announcement = { id: number; title: string; message: string; authorName: string; authorRole: string; section: string | null; createdAt: string };
 type Overview = { academics: { sgpa: number; cgpa: number; semester: number; creditsCompleted: number; creditsRemaining: number }; attendance: { subject: string; attended: number; total: number; trend: number; percentage: number }[]; insights: { category: string; status: string; title: string; detail: string; priority: string }[]; opportunities: { company: string; role: string; package: string; matchScore: number; deadline: string; gap: string }[]; marks: { subject: string; internal1: number; internal2: number; assignment: number; endSemMax: number; credit: number }[]; skills: { id: number; name: string; level: string; score: number }[]; profile: { phone: string; linkedin: string; github: string; portfolio: string; resumeName: string; targetRole: string; completion: number }; timetable: { timeSlot: string; subject: string; classroom: string }[]; weekTimetable?: WeekSlot[]; announcements?: Announcement[]; fees?: { type: 'HOSTEL' | 'TRANSPORT'; amount: number; paid: number; status: 'PAID' | 'PARTIAL' | 'PENDING'; details?: any } };
@@ -890,8 +890,12 @@ function CareerPortalPage({ user, data }: { user: User; data: Overview }) {
     opportunities: data.opportunities,
   })));
 
+  // student_id matches the Career OS seed: STU{userId:05d}
+  const studentId = `STU${String(user.id).padStart(5, '0')}`;
+
   const params = new URLSearchParams({
     erp_session: '1',
+    student_id: studentId,
     name: user.fullName,
     section: user.section || '',
     cgpa: String(data.academics.cgpa),

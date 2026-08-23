@@ -4,6 +4,8 @@ export async function generateJson<T>(prompt: string): Promise<T> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) throw new Error('GEMINI_API_KEY is not configured.');
 
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 30000);
   const response = await fetch(
     `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`,
     {
@@ -12,9 +14,11 @@ export async function generateJson<T>(prompt: string): Promise<T> {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: { responseMimeType: 'application/json' }
-      })
+      }),
+      signal: controller.signal
     }
   );
+  clearTimeout(timeout);
 
   if (!response.ok) {
     const errorBody = await response.text();

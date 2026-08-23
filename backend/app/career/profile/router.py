@@ -3,17 +3,9 @@ from sqlalchemy.orm import Session
 from app.db.database import get_db
 from .schemas import CareerProfileResponse, CareerProfileUpdate
 from .service import CareerProfileService
-from app.students.context.service import student_context_service
+from app.career.deps import get_current_student_id
 
 router = APIRouter()
-
-# Mocking auth dependency for standalone development
-async def get_current_student_id():
-    # In reality this extracts JWT from request and calls student_context_service
-    student = await student_context_service.get_current_student("mock_token")
-    if not student:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return student.id
 
 @router.get("", response_model=CareerProfileResponse)
 async def get_profile(

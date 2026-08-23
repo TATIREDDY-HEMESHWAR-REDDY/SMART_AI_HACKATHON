@@ -1,9 +1,18 @@
-import json
+import json, ast
 from pydantic import BaseModel, Field
 from typing import List
 from app.ai.service import ai_service
 from app.career.roadmap.schemas import CoachResponse, AIRoadmapTask
 import traceback
+
+def _parse_json(text: str) -> dict:
+    start = text.find('{')
+    end = text.rfind('}') + 1
+    chunk = text[start:end] if start != -1 and end > 0 else text
+    try:
+        return json.loads(chunk)
+    except Exception:
+        return ast.literal_eval(chunk)
 
 class AIRoadmapTaskSchema(BaseModel):
     tasks: List[AIRoadmapTask]
@@ -47,7 +56,7 @@ Output ONLY a valid JSON object exactly matching this structure:
             else:
                 json_str = response
                 
-            data = json.loads(json_str)
+            data = _parse_json(response)
             schema_data = AIRoadmapTaskSchema(**data)
             return schema_data.tasks
         except Exception as e:
@@ -88,7 +97,7 @@ Output ONLY a valid JSON object exactly matching this structure:
             else:
                 json_str = response
                 
-            data = json.loads(json_str)
+            data = _parse_json(response)
             return CoachResponse(**data)
         except Exception as e:
             print(f"AI Coach Chat Failed: {e}")

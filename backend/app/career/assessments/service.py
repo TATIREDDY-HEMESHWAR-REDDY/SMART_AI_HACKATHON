@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from datetime import datetime, timedelta
-import json
+import json, ast
 from typing import List, Optional
 
 from .models import Assessment, AssessmentQuestion, AssessmentAttempt, AssessmentAnswer
@@ -247,7 +247,10 @@ class AssessmentService:
         try:
             data = json.loads(response)
         except Exception:
-            raise ValueError("Failed to parse AI response")
+            try:
+                data = ast.literal_eval(response)
+            except Exception:
+                raise ValueError("Failed to parse AI response")
             
         assessment = Assessment(
             title=data.get("title", f"Custom {category} Quiz"),

@@ -5,15 +5,9 @@ from app.db.database import get_db
 from .models import AssessmentAttempt
 from .schemas import AssessmentResponse, AssessmentQuestionPublic, AssessmentAttemptResponse, AnswerUpdate, AssessmentResultResponse, AssessmentQuestionWithAnswer, GenerateAssessmentRequest
 from .service import AssessmentService
-from app.students.context.service import student_context_service
+from app.career.deps import get_current_student_id
 
 router = APIRouter()
-
-async def get_current_student_id():
-    student = await student_context_service.get_current_student("mock_token")
-    if not student:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return student.id
 
 @router.get("/assessments", response_model=List[AssessmentResponse])
 async def list_assessments(

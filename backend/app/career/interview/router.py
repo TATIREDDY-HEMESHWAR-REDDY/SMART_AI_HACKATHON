@@ -3,22 +3,16 @@ from sqlalchemy.orm import Session
 from typing import List
 
 from app.db.database import get_db
-from app.students.context.service import student_context_service
+from app.career.deps import get_current_student_id
 from .service import InterviewService
 from .schemas import (
-    CreateInterview, InterviewSessionResponse, 
+    CreateInterview, InterviewSessionResponse,
     InterviewHistoryItem, InterviewResponseSubmit,
     InterviewResponseResult, InterviewQuestionResponse,
     InterviewReview, InterviewAnalytics
 )
 
 router = APIRouter()
-
-async def get_current_student_id():
-    student = await student_context_service.get_current_student("mock_token")
-    if not student:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return student.id
 
 @router.post("/", response_model=InterviewSessionResponse)
 async def start_interview(

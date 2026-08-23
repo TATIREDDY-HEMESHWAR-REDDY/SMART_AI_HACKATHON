@@ -15,7 +15,7 @@ export async function sendOnboardingEmail(input: { email: string; fullName: stri
     from: MAIL_FROM,
     to: input.email,
     subject: `Your CampusOS ${roleLabel} account is ready`,
-    text: `Hello ${input.fullName},\n\nYour CampusOS account has been created.\n\nOpen ${APP_URL ?? 'http://localhost:3001'}\nUsername: ${input.username}\nTemporary password: ${input.temporaryPassword}\n\nFor security, you will be asked to reset your password immediately after your first sign-in.\n\nCampusOS Admin`,
+    text: `Hello ${input.fullName},\n\nYour CampusOS account has been created.\n\nOpen ${APP_URL ?? 'http://localhost:3000'}?onboard=1\nUsername: ${input.username}\nTemporary password: ${input.temporaryPassword}\n\nFor security, you will be asked to reset your password immediately after your first sign-in.\n\nCampusOS Admin`,
   });
   return { sent: true };
 }

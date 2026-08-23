@@ -65,7 +65,7 @@ function parseERPParams(): { student: Student; authorized: true } | null {
   return {
     authorized: true,
     student: {
-      id: 'erp-student',
+      id: p.get('student_id') ?? 'erp-student',
       email: '',
       name,
       section: p.get('section') ?? undefined,
