@@ -14,14 +14,14 @@ async def get_current_student_id():
         raise HTTPException(status_code=401, detail="Not authenticated")
     return student.id
 
-@router.get("/skills", response_model=List[StudentSkillResponse])
+@router.get("", response_model=List[StudentSkillResponse])
 async def get_skills(
     student_id: str = Depends(get_current_student_id),
     db: Session = Depends(get_db)
 ):
     return SkillService.get_skills(db, student_id)
 
-@router.post("/skills", response_model=StudentSkillResponse)
+@router.post("", response_model=StudentSkillResponse)
 async def create_skill(
     data: StudentSkillCreate,
     student_id: str = Depends(get_current_student_id),
@@ -29,7 +29,7 @@ async def create_skill(
 ):
     return SkillService.create_skill(db, student_id, data)
 
-@router.patch("/skills/{skill_id}", response_model=StudentSkillResponse)
+@router.patch("/{skill_id}", response_model=StudentSkillResponse)
 async def update_skill(
     skill_id: int,
     data: StudentSkillUpdate,
@@ -41,7 +41,7 @@ async def update_skill(
         raise HTTPException(status_code=404, detail="Skill not found")
     return skill
 
-@router.delete("/skills/{skill_id}")
+@router.delete("/{skill_id}")
 async def delete_skill(
     skill_id: int,
     student_id: str = Depends(get_current_student_id),

@@ -18,14 +18,14 @@ async def get_current_student_id():
         raise HTTPException(status_code=401, detail="Not authenticated")
     return student.id
 
-@router.get("/", response_model=List[ResumeOut])
+@router.get("", response_model=List[ResumeOut])
 def get_resumes(
     db: Session = Depends(get_db),
     student_id: str = Depends(get_current_student_id)
 ):
     return ResumeService.get_resumes(db, student_id)
 
-@router.post("/", response_model=ResumeOut)
+@router.post("", response_model=ResumeOut)
 def create_resume(
     resume_in: ResumeCreate,
     db: Session = Depends(get_db),

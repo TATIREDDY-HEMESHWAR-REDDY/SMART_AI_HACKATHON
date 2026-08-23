@@ -2,7 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, BackgroundTasks
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.db.database import get_db
-from .schemas import AssessmentResponse, AssessmentQuestionPublic, AssessmentAttemptResponse, AnswerUpdate, AssessmentResultResponse, AssessmentQuestionWithAnswer
+from .models import AssessmentAttempt
+from .schemas import AssessmentResponse, AssessmentQuestionPublic, AssessmentAttemptResponse, AnswerUpdate, AssessmentResultResponse, AssessmentQuestionWithAnswer, GenerateAssessmentRequest
 from .service import AssessmentService
 from app.students.context.service import student_context_service
 
@@ -38,7 +39,7 @@ async def get_assessment_questions(
     db: Session = Depends(get_db)
 ):
     # Verify attempt is in progress before returning questions without answers
-    attempt = db.query(AssessmentService.get_attempt(db, 0, "").__class__).filter_by(assessment_id=id, student_id=student_id, status="IN_PROGRESS").first()
+    attempt = db.query(AssessmentAttempt).filter_by(assessment_id=id, student_id=student_id, status="IN_PROGRESS").first()
     if not attempt:
         raise HTTPException(status_code=403, detail="No active attempt found for this assessment")
         
@@ -125,3 +126,27 @@ async def review_attempt(
         raise HTTPException(status_code=403, detail="Cannot review incomplete assessment")
         
     return AssessmentService.get_questions(db, attempt.assessment_id)
+
+
+@router.post("/assessments/generate", response_model=AssessmentResponse)
+async def generate_assessment(
+    req: GenerateAssessmentRequest,
+    student_id: str = Depends(get_current_student_id),
+    db: Session = Depends(get_db)
+):
+    try:
+        assessment = await AssessmentService.generate_assessment_with_ai(db, req.prompt, req.category)
+        return assessment
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to generate assessment: {str(e)}")
+
+@router.delete("/assessments/{id}")
+async def delete_assessment(
+    id: int,
+    student_id: str = Depends(get_current_student_id),
+    db: Session = Depends(get_db)
+):
+    success = AssessmentService.delete_assessment(db, id)
+    if not success:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+    return {"status": "ok"}

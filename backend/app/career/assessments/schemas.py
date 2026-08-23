@@ -74,3 +74,8 @@ class AnswerUpdate(BaseModel):
     is_answered: bool
     marked_for_review: bool
     time_spent_seconds: int = 0
+import json
+from pydantic import BaseModel
+class GenerateAssessmentRequest(BaseModel):
+    prompt: str
+    category: str

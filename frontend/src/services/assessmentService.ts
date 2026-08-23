@@ -2,7 +2,18 @@ import { api } from './api';
 
 export const assessmentService = {
   getAssessments: async (category?: string) => {
-    const params = category ? { category } : {};
+    const params = category ? { category } : {
+  generateAssessment: async (prompt: string, category: string) => {
+    const { data } = await api.post('/career/assessments/generate', { prompt, category });
+    return data;
+  },
+  
+  deleteAssessment: async (id: number) => {
+    const { data } = await api.delete(`/career/assessments/${id}`);
+    return data;
+  },
+};
+
     const { data } = await api.get('/career/assessments', { params });
     return data;
   },
@@ -46,4 +57,15 @@ export const assessmentService = {
     const { data } = await api.get(`/career/attempts/${attemptId}/review`);
     return data;
   },
+
+  generateAssessment: async (prompt: string, category: string) => {
+    const { data } = await api.post('/career/assessments/generate', { prompt, category });
+    return data;
+  },
+  
+  deleteAssessment: async (id: number) => {
+    const { data } = await api.delete(`/career/assessments/${id}`);
+    return data;
+  },
 };
+

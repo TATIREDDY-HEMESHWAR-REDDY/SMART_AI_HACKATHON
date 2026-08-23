@@ -30,11 +30,16 @@ class InterviewService:
         profile = CareerProfileService.get_profile(db, student_id)
         resumes = ResumeService.get_resumes(db, student_id)
         
+        
+        from app.career.skills.models import StudentSkill
+        skills = db.query(StudentSkill).filter(StudentSkill.student_id == student_id).all()
+        
         context = {
             "target_role": setup.target_role,
-            "skills": [s.name for s in profile.skills] if profile else [],
+            "skills": [s.name for s in skills] if skills else [],
             "projects": []
         }
+
         if resumes:
             best_resume = resumes[0]
             context["projects"] = [p.name for p in best_resume.projects]

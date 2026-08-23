@@ -1,6 +1,6 @@
-import axios from 'axios';
+import { api as axios } from './api';
 
-const API_URL = '/api/v1/career/coding';
+const API_URL = '/career/coding';
 
 export const codingService = {
   getProblems: async (topic?: string, difficulty?: string) => {

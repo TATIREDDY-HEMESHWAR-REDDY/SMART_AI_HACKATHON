@@ -17,8 +17,8 @@ export default function AssessmentReview() {
   });
 
   const { data: attempt, isLoading: attemptLoading } = useQuery({
-    queryKey: ['attemptResult', id], // Reuse result cache to get user's answers
-    queryFn: () => assessmentService.getResult(Number(id)),
+    queryKey: ['attemptDetails', id], // Reuse result cache to get user's answers
+    queryFn: () => assessmentService.getAttempt(Number(id)),
     enabled: !!id
   });
 
@@ -30,7 +30,7 @@ export default function AssessmentReview() {
     return <div className="text-red-500 text-center p-8">Review not found.</div>;
   }
 
-  const answersMap = attempt.answers.reduce((acc: any, ans: any) => {
+  const answersMap = (attempt.answers || []).reduce((acc: any, ans: any) => {
     acc[ans.question_id] = ans;
     return acc;
   }, {});

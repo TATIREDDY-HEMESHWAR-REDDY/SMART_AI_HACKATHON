@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { assessmentService } from '@/services/assessmentService';
 import { AssessmentCard } from '@/components/career/assessments/AssessmentCard';
+import { GenerateQuizSection } from '@/components/career/assessments/GenerateQuizSection';
 import { Code2 } from 'lucide-react';
 
 export default function TechnicalDashboard() {
@@ -24,6 +25,8 @@ export default function TechnicalDashboard() {
           Evaluate your core computer science knowledge and software engineering principles.
         </p>
       </div>
+
+      <GenerateQuizSection category="TECHNICAL" />
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {assessments?.map((assessment: any) => (

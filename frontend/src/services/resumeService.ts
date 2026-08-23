@@ -1,6 +1,6 @@
-import axios from 'axios';
+import { api as axios } from './api';
 
-const API_URL = '/api/v1/career/resumes';
+const API_URL = '/career/resume';
 
 export interface ResumeData {
   id?: number;

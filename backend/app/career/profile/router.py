@@ -15,7 +15,7 @@ async def get_current_student_id():
         raise HTTPException(status_code=401, detail="Not authenticated")
     return student.id
 
-@router.get("/profile", response_model=CareerProfileResponse)
+@router.get("", response_model=CareerProfileResponse)
 async def get_profile(
     student_id: str = Depends(get_current_student_id),
     db: Session = Depends(get_db)
@@ -28,7 +28,7 @@ async def get_profile(
     response.completion_stats = CareerProfileService.calculate_completion(profile)
     return response
 
-@router.put("/profile", response_model=CareerProfileResponse)
+@router.put("", response_model=CareerProfileResponse)
 async def update_profile(
     data: CareerProfileUpdate,
     student_id: str = Depends(get_current_student_id),
