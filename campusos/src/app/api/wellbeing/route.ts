@@ -38,6 +38,19 @@ export async function GET(request: Request) {
       return NextResponse.json({ checkins });
     }
 
+    if (user.role === 'PARENT') {
+      const { searchParams } = new URL(request.url);
+      const requestedId = Number(searchParams.get('studentId'));
+      const child = requestedId
+        ? db.prepare('SELECT user_id as userId FROM students WHERE user_id = ? AND parent_user_id = ?').get(requestedId, user.id) as any
+        : db.prepare('SELECT user_id as userId FROM students WHERE parent_user_id = ? ORDER BY user_id LIMIT 1').get(user.id) as any;
+
+      if (!child) return NextResponse.json({ checkins: [] });
+
+      const checkins = db.prepare('SELECT id, mood_score as moodScore, notes, created_at as createdAt FROM wellbeing_checkins WHERE user_id = ? ORDER BY created_at DESC').all(child.userId);
+      return NextResponse.json({ checkins });
+    }
+
     return NextResponse.json({ error: 'Invalid role access.' }, { status: 403 });
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });

@@ -13,6 +13,7 @@ const nav = [
   ['Dashboard', LayoutDashboard],
   ['Attendance', CalendarDays],
   ['Exams & Marks', BookOpen],
+  ['Transcripts', GraduationCap],
   ['Calendar', CalendarDays],
   ['Fees', CreditCard],
   ['Hostel / Transport', HomeIcon],
@@ -48,7 +49,56 @@ function Login({ onSuccess }: { onSuccess: (user: User) => void }) {
       setError(err.message || 'Network error.');
     }
   }
-  return <main className="login-shell"><section className="login-copy"><div className="brand"><div className="brand-mark">H</div>Hayagriva Vidya Kendram</div><span className="eyebrow">ACADEMICS · ATTENDANCE · CAREER PREPARATION</span><h1>Everything a student needs to move forward.</h1><p>Academics, career preparation and campus intelligence — brought together in one focused workspace.</p><div className="signal-card"><Sparkles size={19}/><div><b>Built around actionable intelligence</b><span>Understand signals, spot opportunities, then take the right next step.</span></div></div></section><section className="login-panel"><form onSubmit={submit}><div className="login-heading"><div className="mobile-brand"><div className="brand-mark">H</div>Hayagriva Vidya Kendram</div><h2>Welcome back</h2><p>Sign in to your campus workspace.</p></div><label>Username<input value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter your username" autoComplete="username" /></label><label>Password<input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Enter your password" autoComplete="current-password" /></label>{error && <div className="form-error">{error}</div>}<button type="submit" className="primary-button" disabled={loading}>{loading ? 'Signing in…' : 'Sign in'} <ChevronRight size={17}/></button><div className="demo-creds"><span>Demo access</span><button type="button" onClick={() => { setUsername('student'); setPassword('student'); }}>Student</button><button type="button" onClick={() => { setUsername('teacher.a1'); setPassword('teacher.a1'); }}>Teacher A1</button><button type="button" onClick={() => { setUsername('warden'); setPassword('warden'); }}>Warden</button><button type="button" onClick={() => { setUsername('admin'); setPassword('admin'); }}>Admin</button></div></form></section></main>;
+  return <main className="auth-shell"><div className="auth-card">
+    <header className="auth-topbar">
+      <div className="auth-brand"><span className="auth-brand-mark">H</span>Hayagriva <b>Vidya Kendram</b></div>
+      <span className="auth-topbar-note">Institutional access · accounts are created by your administrator</span>
+    </header>
+    <div className="auth-body">
+      <section className="auth-form-col">
+        <h1>Log in</h1>
+        <form onSubmit={submit}>
+          <label>Username or email<input value={username} onChange={e => setUsername(e.target.value)} placeholder="Enter your username or email address" autoComplete="username" /></label>
+          <label>Password<input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Enter your password" autoComplete="current-password" /></label>
+          {error && <div className="form-error">{error}</div>}
+          <button type="submit" className="auth-submit" disabled={loading}>{loading ? 'Logging in…' : 'Log In'}</button>
+        </form>
+        <div className="auth-demo">
+          <span>Demo access</span>
+          <div className="auth-demo-row">
+            <button type="button" onClick={() => { setUsername('student'); setPassword('student'); }}>Student</button>
+            <button type="button" onClick={() => { setUsername('teacher.a1'); setPassword('teacher.a1'); }}>Teacher A1</button>
+            <button type="button" onClick={() => { setUsername('warden'); setPassword('warden'); }}>Warden</button>
+            <button type="button" onClick={() => { setUsername('admin'); setPassword('admin'); }}>Admin</button>
+            <button type="button" onClick={() => { setUsername('riya.parent'); setPassword('riya.parent'); }}>Riya's Parent</button>
+          </div>
+        </div>
+      </section>
+      <section className="auth-art-col" aria-hidden="true">
+        <svg viewBox="0 0 260 220" className="auth-art">
+          <ellipse cx="130" cy="198" rx="92" ry="10" fill="#00000010"/>
+          <g>
+            <rect x="46" y="150" width="150" height="26" rx="3" fill="#c9a9a9"/>
+            <rect x="46" y="150" width="150" height="6" fill="#00000014"/>
+            <rect x="54" y="122" width="134" height="26" rx="3" fill="#847171"/>
+            <rect x="54" y="122" width="134" height="6" fill="#00000014"/>
+            <rect x="62" y="94" width="118" height="26" rx="3" fill="#5b6b5f"/>
+            <rect x="62" y="94" width="118" height="6" fill="#00000014"/>
+            <rect x="70" y="66" width="102" height="26" rx="3" fill="#d3d3d3"/>
+            <rect x="70" y="66" width="102" height="6" fill="#00000014"/>
+            <rect x="78" y="40" width="86" height="24" rx="3" fill="#3f5163"/>
+            <circle cx="121" cy="52" r="7" fill="#e7c873"/>
+          </g>
+          <path d="M188 178 q-4 -34 26 -46" stroke="#5b6b5f" strokeWidth="3" fill="none" strokeLinecap="round"/>
+          <path d="M200 176 q0 -24 18 -34" stroke="#5b6b5f" strokeWidth="3" fill="none" strokeLinecap="round"/>
+          <circle cx="46" cy="70" r="3" fill="#847171"/>
+          <circle cx="30" cy="100" r="2" fill="#847171"/>
+          <circle cx="210" cy="60" r="3" fill="#5b6b5f"/>
+          <rect x="30" y="176" width="46" height="6" rx="3" fill="#3f5163" transform="rotate(-8 30 176)"/>
+        </svg>
+      </section>
+    </div>
+  </div></main>;
 }
 
 function StudentDashboard({ user, data, logout, page, setPage, updateData }: { user: User; data: Overview; logout: () => void; page: string; setPage: (page: string) => void; updateData: (next: Overview) => void }) {
@@ -1378,10 +1428,18 @@ function StudentDetailPage({ studentId, onBack, onDelete, logout }: { studentId:
 function ParentWorkspace({ user, logout }: { user: User; logout: () => void }) {
   const [overview, setOverview] = useState<any>(null);
   const [selectedChildId, setSelectedChildId] = useState<number | null>(null);
+  const [safety, setSafety] = useState<any>(null);
+  const [wellbeing, setWellbeing] = useState<any>(null);
 
   useEffect(() => {
     const query = selectedChildId ? `?studentId=${selectedChildId}` : '';
     fetch(`/api/parent/overview${query}`).then(r => r.json()).then(r => { setOverview(r); if (r.selectedStudentId) setSelectedChildId(r.selectedStudentId); });
+  }, [selectedChildId]);
+
+  useEffect(() => {
+    if (!selectedChildId) return;
+    fetch(`/api/safety?studentId=${selectedChildId}`).then(r => r.json()).then(setSafety);
+    fetch(`/api/wellbeing?studentId=${selectedChildId}`).then(r => r.json()).then(setWellbeing);
   }, [selectedChildId]);
 
   if (!overview) return <main className="loading"><div className="brand"><div className="brand-mark">H</div>Hayagriva Vidya Kendram</div><p>Loading your child's workspace…</p></main>;
@@ -1427,6 +1485,43 @@ function ParentWorkspace({ user, logout }: { user: User; logout: () => void }) {
             <div className="table-row" key={row.subject} style={{ gridTemplateColumns: '2fr 1fr 1fr 1fr' }}><b>{row.subject}</b><span>{row.internal1}</span><span>{row.internal2}</span><span>{row.assignment}</span></div>
           ))}
         </div>
+      </article>
+    </div>
+    <div className="two-column" style={{ marginTop: '24px' }}>
+      <article className="card table-card">
+        <div className="card-heading"><div><span className="eyebrow">SAFETY</span><h2>Emergency &amp; incident alerts</h2></div></div>
+        {safety?.incidents?.length ? (
+          <div className="data-table">
+            <div className="table-head" style={{ gridTemplateColumns: '1fr 1.6fr 0.9fr 0.9fr' }}><span>Type</span><span>Title</span><span>Status</span><span>Reported</span></div>
+            {safety.incidents.map((row: any) => (
+              <div className="table-row" key={row.id} style={{ gridTemplateColumns: '1fr 1.6fr 0.9fr 0.9fr' }}>
+                <span className={row.type === 'EMERGENCY' ? 'warning-text' : ''}>{row.type}</span>
+                <b>{row.title}</b>
+                <span className={row.status === 'RESOLVED' ? 'badge good' : 'badge warning'}>{row.status}</span>
+                <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ padding: '20px 8px', color: '#758298', fontSize: '13px' }}>No safety incidents reported.</p>
+        )}
+      </article>
+      <article className="card table-card">
+        <div className="card-heading"><div><span className="eyebrow">WELLBEING</span><h2>Mood check-ins</h2></div></div>
+        {wellbeing?.checkins?.length ? (
+          <div className="data-table">
+            <div className="table-head" style={{ gridTemplateColumns: '0.7fr 1.6fr 1fr' }}><span>Mood</span><span>Notes</span><span>Date</span></div>
+            {wellbeing.checkins.map((row: any) => (
+              <div className="table-row" key={row.id} style={{ gridTemplateColumns: '0.7fr 1.6fr 1fr' }}>
+                <b>{row.moodScore}/5</b>
+                <span>{row.notes || '—'}</span>
+                <span>{new Date(row.createdAt).toLocaleDateString()}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p style={{ padding: '20px 8px', color: '#758298', fontSize: '13px' }}>No wellbeing check-ins yet.</p>
+        )}
       </article>
     </div>
     {overview.fees && (
