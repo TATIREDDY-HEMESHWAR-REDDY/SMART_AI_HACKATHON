@@ -28,6 +28,9 @@ import JobDetails from '@/pages/career/jobs/JobDetails';
 import ApplicationsDashboard from '@/pages/career/jobs/ApplicationsDashboard';
 import ApplicationDetails from '@/pages/career/jobs/ApplicationDetails';
 
+import CareerCommandCenter from '@/pages/career/roadmap/CareerCommandCenter';
+import CareerCoach from '@/pages/career/roadmap/CareerCoach';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -69,9 +72,10 @@ export default function AppRoutes() {
         <Route path="applications" element={<ApplicationsDashboard />} />
         <Route path="applications/:id" element={<ApplicationDetails />} />
 
-        <Route path="roadmap" element={<div className="p-4">Roadmap Module (Phase 8)</div>} />
-        <Route path="coach" element={<div className="p-4">AI Coach Module (Phase 8)</div>} />
-        <Route path="analytics" element={<div className="p-4">Analytics Module (Phase 8)</div>} />
+        {/* Roadmap & Coach */}
+        <Route path="roadmap" element={<CareerCommandCenter />} />
+        <Route path="coach" element={<CareerCoach />} />
+        <Route path="analytics" element={<div className="p-4">Analytics Module (Phase 10)</div>} />
       </Route>
     </Routes>
   );
