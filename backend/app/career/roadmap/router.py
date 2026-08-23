@@ -5,7 +5,8 @@ from app.db.database import get_db
 from app.students.context.service import student_context_service
 from app.career.roadmap.schemas import (
     CareerGoalCreate, CareerGoalUpdate, CareerGoalResponse,
-    RoadmapTaskUpdate, RoadmapTaskResponse, RoadmapResponse
+    RoadmapTaskUpdate, RoadmapTaskResponse, RoadmapResponse,
+    
 )
 from app.career.roadmap.service import RoadmapService
 
@@ -25,11 +26,11 @@ def get_roadmap(
     return RoadmapService.get_roadmap(db, student_id)
 
 @router.post("/generate", response_model=List[RoadmapTaskResponse])
-def generate_roadmap(
+async def generate_roadmap(
     db: Session = Depends(get_db),
     student_id: str = Depends(get_current_student_id)
 ):
-    return RoadmapService.generate_roadmap(db, student_id)
+    return await RoadmapService.generate_roadmap(db, student_id)
 
 @router.get("/goals", response_model=CareerGoalResponse)
 def get_active_goal(

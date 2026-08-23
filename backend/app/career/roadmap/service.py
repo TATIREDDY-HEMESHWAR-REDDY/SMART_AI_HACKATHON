@@ -1,3 +1,7 @@
+
+from app.career.roadmap.context_service import gather_student_context
+from app.career.roadmap.ai_service import RoadmapAIService
+from app.career.roadmap.schemas import CoachResponse, TaskCategory, TaskPriority, TaskSource, RoadmapTaskCreate
 from sqlalchemy.orm import Session
 from sqlalchemy import desc
 from typing import List, Optional
@@ -57,10 +61,37 @@ class RoadmapService:
         db.refresh(goal)
         return goal
 
+
     @staticmethod
-    def generate_roadmap(db: Session, student_id: str) -> List[RoadmapTask]:
+    async def chat_with_coach(db: Session, student_id: str, message: str) -> CoachResponse:
+        context = gather_student_context(db, student_id)
+        return await RoadmapAIService.chat_with_coach(context, message)
+
+    @staticmethod
+    async def generate_roadmap(db: Session, student_id: str) -> List[RoadmapTask]:
         generated_tasks = RoadmapRuleEngine.generate_deterministic_tasks(db, student_id)
         
+        # Phase 9B: AI Enrichment
+        context = gather_student_context(db, student_id)
+        ai_tasks_data = await RoadmapAIService.generate_roadmap_tasks(context)
+        
+        for ai_task in ai_tasks_data:
+            try:
+                # Validate enum manually
+                category = TaskCategory(ai_task.category.upper())
+                priority = TaskPriority(ai_task.priority.upper())
+                
+                generated_tasks.append(RoadmapTaskCreate(
+                    title=ai_task.title,
+                    description=ai_task.description + f"\n\nReason: {ai_task.reason}",
+                    category=category,
+                    priority=priority,
+                    source=TaskSource.AI
+                ))
+            except ValueError:
+                # Invalid category or priority, drop it safely
+                continue
+                
         # Deduplication: Get existing PENDING tasks
         pending_tasks = db.query(RoadmapTask).filter(
             RoadmapTask.student_id == student_id,
@@ -96,7 +127,6 @@ class RoadmapService:
             RoadmapTask.student_id == student_id,
             RoadmapTask.status == "PENDING"
         ).all()
-
     @staticmethod
     def get_roadmap(db: Session, student_id: str) -> dict:
         goal = RoadmapService.get_active_goal(db, student_id)

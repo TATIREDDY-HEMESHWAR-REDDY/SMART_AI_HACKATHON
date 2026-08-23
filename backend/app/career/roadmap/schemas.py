@@ -96,3 +96,20 @@ class RoadmapResponse(BaseModel):
     completed_tasks: int = 0
     progress_percentage: int = 0
     career_gaps: List[str] = []
+
+class CoachChatRequest(BaseModel):
+    message: str
+
+class CoachResponse(BaseModel):
+    answer: str
+    key_points: List[str] = []
+    recommended_actions: List[str] = []
+    referenced_gaps: List[str] = []
+    confidence: int
+
+class AIRoadmapTask(BaseModel):
+    title: str
+    description: str
+    category: str
+    priority: str
+    reason: str
