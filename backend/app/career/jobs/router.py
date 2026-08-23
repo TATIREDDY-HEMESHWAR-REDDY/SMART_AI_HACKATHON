@@ -68,14 +68,15 @@ def unsave_job(
         raise HTTPException(status_code=400, detail=str(e))
 
 @router.post("/jobs/{job_id}/match", response_model=JobMatchResponse)
-def match_job(
+async def match_job(
     job_id: int,
     resume_id: int = Query(..., description="ID of the resume to match against"),
+    force_refresh: bool = Query(False, description="Force AI re-analysis"),
     db: Session = Depends(get_db),
     student_id: str = Depends(get_current_student_id)
 ):
     try:
-        return JobMatchService.match_job(db, student_id, job_id, resume_id)
+        return await JobMatchService.match_job(db, student_id, job_id, resume_id, force_refresh)
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 

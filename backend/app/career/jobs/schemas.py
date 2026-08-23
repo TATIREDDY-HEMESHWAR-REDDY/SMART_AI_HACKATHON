@@ -64,14 +64,29 @@ class JobApplicationResponse(BaseModel):
     class Config:
         from_attributes = True
 
+from app.career.resume.schemas import ResumeOut
+
 class JobMatchResponse(BaseModel):
     id: int
     job_id: int
     resume_id: int
+    
+    job: Optional[JobResponse] = None
+    resume: Optional[ResumeOut] = None
+    
     match_score: Optional[float] = None
     deterministic_score: Optional[float] = None
+    
+    matched_skills: List[str] = []
     missing_skills: List[str] = []
     missing_keywords: List[str] = []
+    
+    ai_strengths: List[str] = []
+    ai_gaps: List[str] = []
+    role_alignment: Optional[str] = None
+    recommendations: List[str] = []
+    ai_available: bool = False
+    
     analyzed_at: datetime
     is_stale: bool = False
     

@@ -160,9 +160,48 @@ class ApplicationService:
         return activity
 
 
+from app.career.jobs.ai_service import JobsAIService
+
 class JobMatchService:
     @staticmethod
-    def match_job(db: Session, student_id: str, job_id: int, resume_id: int):
+    def _build_response(match: JobMatch, job: Job, resume, is_stale: bool):
+        # Base dict from SQLAlchemy object
+        resp = {
+            "id": match.id,
+            "job_id": match.job_id,
+            "resume_id": match.resume_id,
+            "job": job,
+            "resume": resume,
+            "match_score": match.match_score,
+            "deterministic_score": match.deterministic_score,
+            "missing_skills": match.missing_skills,
+            "missing_keywords": match.missing_keywords,
+            "analyzed_at": match.analyzed_at,
+            "is_stale": is_stale,
+            
+            "matched_skills": [],
+            "ai_strengths": [],
+            "ai_gaps": [],
+            "role_alignment": None,
+            "recommendations": [],
+            "ai_available": False
+        }
+        
+        job_reqs = set([req.lower() for req in (job.requirements or [])])
+        resume_skills = set([s.name.lower() for s in resume.skills])
+        resp["matched_skills"] = list(job_reqs.intersection(resume_skills))
+        
+        if match.ai_analysis:
+            resp["ai_available"] = True
+            resp["ai_strengths"] = match.ai_analysis.get("strengths", [])
+            resp["ai_gaps"] = match.ai_analysis.get("potential_gaps", [])
+            resp["role_alignment"] = match.ai_analysis.get("role_alignment")
+            resp["recommendations"] = match.ai_analysis.get("recommendations", [])
+            
+        return resp
+
+    @staticmethod
+    async def match_job(db: Session, student_id: str, job_id: int, resume_id: int, force_refresh: bool = False):
         job = JobService.get_job(db, job_id)
         if not job:
             raise ValueError("Job not found or inactive")
@@ -177,19 +216,14 @@ class JobMatchService:
             JobMatch.resume_id == resume_id
         ).first()
         
-        # Determine staleness BEFORE we regenerate
         is_stale = False
         if match and resume.updated_at and match.analyzed_at < resume.updated_at:
             is_stale = True
             
-        # Return existing if not forced or already generated?
-        # Actually, the user says "Do not automatically regenerate matches."
-        # If the match exists, we just return it.
-        if match:
-            match.is_stale = is_stale
-            return match
+        if match and not force_refresh:
+            return JobMatchService._build_response(match, job, resume, is_stale)
             
-        # Deterministic match
+        # 1. Deterministic match
         job_reqs = set([req.lower() for req in (job.requirements or [])])
         resume_skills = set([s.name.lower() for s in resume.skills])
         
@@ -202,21 +236,35 @@ class JobMatchService:
         else:
             deterministic_score = 100.0
             
-        missing_skills = list(missing)
-        missing_keywords = list(missing) # Simplified for deterministic
+        # 2. AI match
+        ai_assessment = await JobsAIService.analyze_job_match(resume, job)
         
-        match = JobMatch(
-            student_id=student_id,
-            job_id=job_id,
-            resume_id=resume_id,
-            deterministic_score=deterministic_score,
-            missing_skills=missing_skills,
-            missing_keywords=missing_keywords,
-            analyzed_at=datetime.utcnow()
-        )
-        db.add(match)
+        # 3. Final score computation
+        # Formula: 70% deterministic + 30% AI (if available)
+        final_score = deterministic_score
+        ai_analysis_dict = None
+        
+        if ai_assessment:
+            ai_score = ai_assessment.ai_alignment_score
+            final_score = (deterministic_score * 0.7) + (ai_score * 0.3)
+            ai_analysis_dict = ai_assessment.model_dump()
+            
+        if not match:
+            match = JobMatch(
+                student_id=student_id,
+                job_id=job_id,
+                resume_id=resume_id
+            )
+            db.add(match)
+            
+        match.deterministic_score = round(deterministic_score, 2)
+        match.match_score = round(final_score, 2)
+        match.missing_skills = list(missing)
+        match.missing_keywords = list(missing)
+        match.ai_analysis = ai_analysis_dict
+        match.analyzed_at = datetime.utcnow()
+        
         db.commit()
         db.refresh(match)
         
-        match.is_stale = False
-        return match
+        return JobMatchService._build_response(match, job, resume, False)
