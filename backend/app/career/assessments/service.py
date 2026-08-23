@@ -163,7 +163,7 @@ class AssessmentService:
         # Async AI analysis - handles failure gracefully without preventing commit
         try:
             prompt = f"Analyze this student's assessment performance. They scored {attempt.percentage}% ({correct} correct, {incorrect} incorrect, {unanswered} unanswered). Provide a brief encouraging summary and 2 actionable recommendations based on these stats."
-            insight = await ai_service.generate(prompt=prompt)
+            insight = await ai_service.generate(prompt=prompt, json_mode=False)
             attempt.ai_insight = insight
         except Exception:
             attempt.ai_insight = "Keep practicing to improve your score!"

@@ -9,14 +9,14 @@ class AIService:
         self.primary_provider = primary_provider
         self.fallback_providers = fallback_providers or []
 
-    async def generate(self, prompt: str, **kwargs) -> str:
+    async def generate(self, prompt: str, json_mode: bool = True, **kwargs) -> str:
         try:
-            return await self.primary_provider.generate(prompt, **kwargs)
+            return await self.primary_provider.generate(prompt, json_mode=json_mode, **kwargs)
         except Exception as e:
             print(f"AI Generate Exception: {e}")
             for provider in self.fallback_providers:
                 try:
-                    return await provider.generate(prompt, **kwargs)
+                    return await provider.generate(prompt, json_mode=json_mode, **kwargs)
                 except Exception:
                     pass
             return "Dummy generated response"

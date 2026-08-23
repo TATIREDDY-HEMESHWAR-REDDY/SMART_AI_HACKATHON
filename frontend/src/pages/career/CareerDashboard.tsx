@@ -18,7 +18,7 @@ export default function CareerDashboard() {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -51,98 +51,135 @@ export default function CareerDashboard() {
     Projects: Briefcase,
   };
 
+  const assessedCount = readiness?.components?.filter((c: any) => c.status === 'ASSESSED').length || 0;
+  const strongest = [...(readiness?.components ?? [])]
+    .filter((c: any) => c.status === 'ASSESSED')
+    .sort((a: any, b: any) => b.score - a.score)
+    .slice(0, 2);
+  const weakest = [...(readiness?.components ?? [])]
+    .filter((c: any) => c.status !== 'ASSESSED' || c.score < 60)
+    .slice(0, 2);
+
   return (
-    <div className="space-y-8 max-w-6xl mx-auto pb-12">
-      <div className="flex justify-between items-end">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-            Good evening, {student?.name?.split(' ')[0]} 👋
-          </h2>
-          <p className="text-gray-500 mt-2 text-lg">
-            Here's your career readiness overview and recommended next steps.
-          </p>
-        </div>
+    <div className="space-y-6 max-w-6xl mx-auto pb-12">
+      <div>
+        <h2 className="font-serif text-2xl font-semibold text-foreground">
+          Good evening, {student?.name?.split(' ')[0]}
+        </h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          Career readiness overview and recommended next steps.
+        </p>
       </div>
 
+      {/* Readiness + target role, data-first */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Score Card */}
-        <Card className="lg:col-span-1 bg-gradient-to-b from-white to-gray-50 border-gray-200">
-          <CardContent className="p-8 flex flex-col items-center justify-center h-full min-h-[300px]">
-            <ScoreRing score={readiness?.overall_score ?? null} size={160} strokeWidth={12} />
-            <div className="mt-6 text-center">
-              <h3 className="font-semibold text-lg text-gray-800">Overall Readiness</h3>
-              {readiness?.overall_score !== null ? (
-                <p className="text-sm text-gray-500 mt-1">Based on {readiness?.components?.filter((c: any) => c.status === 'ASSESSED').length || 0} assessed modules.</p>
+        <Card className="lg:col-span-1">
+          <CardContent className="p-6 flex flex-col items-center justify-center h-full min-h-[220px]">
+            <ScoreRing score={readiness?.overall_score ?? null} size={132} strokeWidth={9} />
+            <p className="text-xs text-muted-foreground mt-4 text-center">
+              {readiness?.overall_score !== null
+                ? `Based on ${assessedCount} assessed modules`
+                : 'Complete assessments to unlock your score'}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-2">
+          <CardContent className="p-6 grid grid-cols-2 gap-8 h-full">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Strongest areas</p>
+              {strongest.length > 0 ? (
+                <ul className="space-y-2">
+                  {strongest.map((c: any) => (
+                    <li key={c.name} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground">{c.name}</span>
+                      <span className="text-muted-foreground">{Math.round(c.score)}%</span>
+                    </li>
+                  ))}
+                </ul>
               ) : (
-                <p className="text-sm text-gray-500 mt-1">Complete assessments to unlock your score.</p>
+                <p className="text-sm text-muted-foreground">Not enough data yet</p>
+              )}
+            </div>
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2">Needs attention</p>
+              {weakest.length > 0 ? (
+                <ul className="space-y-2">
+                  {weakest.map((c: any) => (
+                    <li key={c.name} className="flex items-center justify-between text-sm">
+                      <span className="text-foreground">{c.name}</span>
+                      <span className="text-amber-700">{c.status === 'ASSESSED' ? `${Math.round(c.score)}%` : 'Not started'}</span>
+                    </li>
+                  ))}
+                </ul>
+              ) : (
+                <p className="text-sm text-muted-foreground">Nothing flagged</p>
               )}
             </div>
           </CardContent>
         </Card>
+      </div>
 
-        {/* AI Insight Card */}
-        <Card className="lg:col-span-2 border-blue-100 shadow-blue-50/50 shadow-lg">
-          <CardHeader className="bg-blue-50/50 border-blue-100 flex flex-row items-center space-x-3 pb-4">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Lightbulb className="w-5 h-5 text-blue-700" />
-            </div>
-            <CardTitle className="text-blue-900">AI Career Coach Insight</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {ai_insight ? (
-              <div className="space-y-6">
-                <p className="text-gray-700 text-lg leading-relaxed">
-                  "{ai_insight.content}"
-                </p>
+      {/* AI coach insight — plain, structured, embedded */}
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-2.5">
+          <Lightbulb className="w-4 h-4 text-primary" />
+          <CardTitle>Career coach note</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {ai_insight ? (
+            <div className="space-y-4">
+              <p className="text-foreground/80 text-[15px] leading-relaxed">
+                {ai_insight.content}
+              </p>
+              {ai_insight.recommendations?.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-semibold text-gray-900 uppercase tracking-wider mb-3">Recommended Actions</h4>
-                  <ul className="space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5">Next actions</p>
+                  <ul className="space-y-2">
                     {ai_insight.recommendations?.map((rec: string, idx: number) => (
-                      <li key={idx} className="flex items-start">
-                        <span className="flex-shrink-0 h-6 w-6 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold mr-3 mt-0.5">
+                      <li key={idx} className="flex items-start text-sm">
+                        <span className="flex-shrink-0 h-5 w-5 rounded bg-accent text-accent-foreground flex items-center justify-center text-[11px] font-semibold mr-2.5 mt-0.5">
                           {idx + 1}
                         </span>
-                        <span className="text-gray-700">{rec}</span>
+                        <span className="text-foreground/80">{rec}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-              </div>
-            ) : (
-              <p className="text-gray-500 italic">No insights available right now.</p>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              )}
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-sm">No insights available right now.</p>
+          )}
+        </CardContent>
+      </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Component Breakdown */}
         <Card className="lg:col-span-2">
           <CardHeader>
-            <CardTitle>Readiness Breakdown</CardTitle>
+            <CardTitle>Readiness breakdown</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-border">
               {readiness?.components?.map((comp: any) => {
                 const Icon = componentIcons[comp.name] || Target;
                 const isAssessed = comp.status === 'ASSESSED';
                 return (
-                  <div key={comp.name} className="p-4 flex items-center hover:bg-gray-50 transition-colors">
-                    <div className="p-2 bg-gray-100 rounded-lg mr-4">
-                      <Icon className="w-5 h-5 text-gray-600" />
-                    </div>
+                  <div key={comp.name} className="px-6 py-3.5 flex items-center hover:bg-secondary/50 transition-colors">
+                    <Icon className="w-4 h-4 text-muted-foreground mr-3.5 flex-shrink-0" />
                     <div className="flex-1">
                       <div className="flex justify-between items-center mb-1.5">
-                        <span className="font-medium text-gray-900">{comp.name}</span>
+                        <span className="text-sm text-foreground">{comp.name}</span>
                         {isAssessed ? (
-                          <span className="font-semibold text-gray-700">{Math.round(comp.score)}%</span>
+                          <span className="text-sm text-foreground/70 tabular-nums">{Math.round(comp.score)}%</span>
                         ) : (
-                          <Badge variant="outline" className="text-gray-500 font-normal">Not Assessed</Badge>
+                          <Badge variant="outline" className="font-normal">Not assessed</Badge>
                         )}
                       </div>
-                      <ProgressBar 
-                        progress={isAssessed ? comp.score : 0} 
-                        colorClass={isAssessed ? "bg-blue-600" : "bg-gray-200"} 
+                      <ProgressBar
+                        progress={isAssessed ? comp.score : 0}
+                        colorClass={isAssessed ? "bg-primary" : "bg-secondary"}
                       />
                     </div>
                   </div>
@@ -156,30 +193,30 @@ export default function CareerDashboard() {
           {/* Profile Completion */}
           <Card>
             <CardHeader>
-              <CardTitle>Profile Completion</CardTitle>
+              <CardTitle>Profile completion</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-end justify-between mb-2">
-                <span className="text-3xl font-bold text-gray-900">
+                <span className="font-serif text-2xl font-semibold text-foreground">
                   {erpCompletion ?? profile?.completion_stats?.completion_percentage ?? 0}%
                 </span>
               </div>
-              <ProgressBar progress={erpCompletion ?? profile?.completion_stats?.completion_percentage ?? 0} colorClass="bg-green-500" />
+              <ProgressBar progress={erpCompletion ?? profile?.completion_stats?.completion_percentage ?? 0} colorClass="bg-primary" />
 
               {erpProfile && (
-                <div className="mt-6">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Missing Information</h4>
+                <div className="mt-5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5">Missing information</p>
                   <div className="flex flex-wrap gap-2">
                     {!erpProfile.github && <Badge variant="warning">GitHub</Badge>}
                     {!erpProfile.linkedin && <Badge variant="warning">LinkedIn</Badge>}
-                    {!erpProfile.targetRole && <Badge variant="warning">Target Role</Badge>}
+                    {!erpProfile.targetRole && <Badge variant="warning">Target role</Badge>}
                   </div>
                 </div>
               )}
 
               {!erpProfile && profile?.completion_stats?.missing_sections?.length > 0 && (
-                <div className="mt-6">
-                  <h4 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Missing Information</h4>
+                <div className="mt-5">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-2.5">Missing information</p>
                   <div className="flex flex-wrap gap-2">
                     {profile.completion_stats.missing_sections.map((sec: string) => (
                       <Badge key={sec} variant="warning" className="capitalize">{sec.replace('_', ' ')}</Badge>
@@ -193,23 +230,23 @@ export default function CareerDashboard() {
           {/* Top Skills */}
           <Card>
             <CardHeader>
-              <CardTitle>Top Verified Skills</CardTitle>
+              <CardTitle>Top verified skills</CardTitle>
             </CardHeader>
             <CardContent>
               {top_skills?.length > 0 ? (
-                <div className="space-y-4">
+                <div className="space-y-3.5">
                   {top_skills.map((skill: any) => (
                     <div key={skill.id} className="flex justify-between items-center">
                       <div>
-                        <p className="font-medium text-gray-900">{skill.name}</p>
-                        <p className="text-xs text-gray-500">{skill.category} • {skill.level}</p>
+                        <p className="text-sm text-foreground">{skill.name}</p>
+                        <p className="text-xs text-muted-foreground">{skill.category} · {skill.level}</p>
                       </div>
                       <Badge variant="success">{skill.score ? `${Math.round(skill.score)} pts` : 'Verified'}</Badge>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-gray-500 text-sm">Complete assessments to verify your skills.</p>
+                <p className="text-muted-foreground text-sm">Complete assessments to verify your skills.</p>
               )}
             </CardContent>
           </Card>

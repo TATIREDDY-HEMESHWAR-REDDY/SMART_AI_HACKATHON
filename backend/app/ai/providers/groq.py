@@ -16,17 +16,20 @@ class GroqProvider(BaseAIProvider):
         self.url = "https://api.groq.com/openai/v1/chat/completions"
         self.model = "qwen/qwen3.6-27b"
 
-    async def generate(self, prompt: str, **kwargs) -> str:
+    async def generate(self, prompt: str, json_mode: bool = True, **kwargs) -> str:
         if not self.api_key:
             return "Dummy generated response"
 
+        messages = [{"role": "user", "content": prompt}]
+        if json_mode:
+            messages.insert(0, {"role": "system", "content": "Respond with valid JSON only. No markdown fences, no explanations. Output must start with {."})
+
         payload = {
             "model": self.model,
-            "messages": [
-                {"role": "system", "content": "Respond with valid JSON only. No markdown fences, no explanations. Output must start with {."},
-                {"role": "user", "content": prompt}
-            ],
-            "temperature": 0.7
+            "messages": messages,
+            "temperature": 0.7,
+            "max_tokens": 3000,
+            "reasoning_effort": "none"
         }
 
         async with httpx.AsyncClient(verify=False) as client:
@@ -34,7 +37,7 @@ class GroqProvider(BaseAIProvider):
                 self.url,
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                timeout=30.0
+                timeout=60.0
             )
             response.raise_for_status()
             data = response.json()
@@ -50,7 +53,9 @@ class GroqProvider(BaseAIProvider):
         payload = {
             "model": self.model,
             "messages": messages,
-            "temperature": 0.7
+            "temperature": 0.7,
+            "max_tokens": 3000,
+            "reasoning_effort": "none"
         }
 
         async with httpx.AsyncClient(verify=False) as client:
@@ -58,7 +63,7 @@ class GroqProvider(BaseAIProvider):
                 self.url,
                 json=payload,
                 headers={"Authorization": f"Bearer {self.api_key}"},
-                timeout=30.0
+                timeout=60.0
             )
             response.raise_for_status()
             data = response.json()

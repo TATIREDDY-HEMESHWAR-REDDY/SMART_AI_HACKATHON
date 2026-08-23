@@ -10,10 +10,12 @@ export async function generateJsonGroq<T>(prompt: string): Promise<T> {
     body: JSON.stringify({
       model: 'qwen/qwen3.6-27b',
       messages: [
-        { role: 'system', content: '/no_think\nRespond with valid JSON only. No markdown fences, no explanations, no thinking tags. Output must start with [ or {.' },
+        { role: 'system', content: 'Respond with valid JSON only. No markdown fences, no explanations, no thinking tags. Output must start with [ or {.' },
         { role: 'user', content: prompt }
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 3000,
+      reasoning_effort: 'none'
     }),
     signal: controller.signal
   });

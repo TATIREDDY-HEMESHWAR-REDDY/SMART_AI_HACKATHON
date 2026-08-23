@@ -48,7 +48,8 @@ class DashboardService:
                           f"Readiness: {readiness.overall_score if readiness.overall_score else 'Not assessed'}"
                           
             ai_response = await ai_service.generate(
-                prompt=f"You are a career coach. Given this student context: {context_str}. Provide a short 2 sentence insight and exactly 3 actionable recommendations."
+                prompt=f"You are a career coach. Given this student context: {context_str}. Provide a short 2 sentence insight and exactly 3 actionable recommendations.",
+                json_mode=False
             )
             
             # Simple mock parsing for Phase 2 since we use a dummy AI provider currently

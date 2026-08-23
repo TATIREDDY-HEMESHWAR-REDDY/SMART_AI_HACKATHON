@@ -117,7 +117,7 @@ class CodingService:
         if status != "ACCEPTED":
             try:
                 prompt = f"The student attempted a coding problem '{problem.title}' but got {status}. Provide a brief 1-2 sentence hint conceptually without writing code. Topic is {problem.topic}."
-                ai_feedback = await ai_service.generate(prompt=prompt)
+                ai_feedback = await ai_service.generate(prompt=prompt, json_mode=False)
                 submission.ai_feedback = ai_feedback
                 db.commit()
             except Exception:

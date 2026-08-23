@@ -16,16 +16,16 @@ export function ScoreRing({
   const offset = score !== null ? circumference - (score / 100) * circumference : circumference;
   
   const getColor = (s: number) => {
-    if (s >= 80) return 'text-green-500';
-    if (s >= 60) return 'text-amber-500';
+    if (s >= 80) return 'text-emerald-600';
+    if (s >= 60) return 'text-amber-600';
     return 'text-red-500';
   };
-  
+
   return (
     <div className={cn("relative inline-flex items-center justify-center", className)} style={{ width: size, height: size }}>
       <svg className="transform -rotate-90 w-full h-full">
         <circle
-          className="text-gray-100"
+          className="text-secondary"
           strokeWidth={strokeWidth}
           stroke="currentColor"
           fill="transparent"
@@ -51,11 +51,11 @@ export function ScoreRing({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {score !== null ? (
           <>
-            <span className="text-3xl font-bold text-gray-900">{Math.round(score)}%</span>
-            <span className="text-xs text-gray-500 font-medium">Readiness</span>
+            <span className="font-serif text-3xl font-semibold text-foreground">{Math.round(score)}%</span>
+            <span className="text-xs text-muted-foreground">Readiness</span>
           </>
         ) : (
-          <span className="text-sm font-medium text-gray-400 text-center px-4">Not<br/>Assessed</span>
+          <span className="text-sm text-muted-foreground text-center px-4">Not<br/>Assessed</span>
         )}
       </div>
     </div>

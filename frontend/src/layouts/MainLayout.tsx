@@ -37,32 +37,40 @@ export default function MainLayout() {
   const { student, loading } = useStudent();
 
   return (
-    <div className="flex h-screen bg-gray-50/50">
+    <div className="flex h-screen bg-background">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 flex flex-col">
-        <div className="h-16 flex items-center px-6 border-b border-gray-200">
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-            Career OS
-          </span>
+      <div className="w-64 bg-card border-r border-border flex flex-col">
+        <div className="flex items-center px-5 pt-6 pb-5 border-b border-border">
+          <div className="h-8 w-8 rounded-md bg-primary text-primary-foreground grid place-items-center font-semibold text-sm shrink-0">
+            H
+          </div>
+          <div className="ml-2.5 min-w-0">
+            <p className="font-serif text-[13.5px] leading-tight font-semibold text-foreground truncate">
+              Hayagriva Vidya Kendram
+            </p>
+            <p className="text-[10px] tracking-wider uppercase text-muted-foreground mt-0.5">
+              Career Wing
+            </p>
+          </div>
         </div>
-        
-        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-1">
+
+        <nav className="flex-1 overflow-y-auto py-3 px-3 space-y-0.5">
           {navigation.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(`${item.href}/`);
             return (
               <Link
                 key={item.name}
                 to={item.href}
-                className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive 
-                    ? 'bg-blue-50 text-blue-700' 
-                    : 'text-gray-700 hover:bg-gray-100'
+                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                  isActive
+                    ? 'bg-accent text-accent-foreground font-medium'
+                    : 'text-foreground/70 hover:bg-secondary hover:text-foreground'
                 }`}
               >
-                <item.icon 
-                  className={`mr-3 h-5 w-5 flex-shrink-0 ${
-                    isActive ? 'text-blue-700' : 'text-gray-400'
-                  }`} 
+                <item.icon
+                  className={`mr-3 h-4 w-4 flex-shrink-0 ${
+                    isActive ? 'text-accent-foreground' : 'text-muted-foreground'
+                  }`}
                 />
                 {item.name}
               </Link>
@@ -70,21 +78,21 @@ export default function MainLayout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200 space-y-3">
+        <div className="p-3 border-t border-border space-y-1">
           <a
             href={ERP_URL}
-            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors w-full"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-foreground/70 hover:bg-secondary hover:text-foreground rounded-md transition-colors w-full"
           >
-            <ArrowLeft className="h-4 w-4 text-gray-400" />
-            Back to CampusOS ERP
+            <ArrowLeft className="h-4 w-4 text-muted-foreground" />
+            Back to Hayagriva ERP
           </a>
-          <div className="flex items-center">
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
+          <div className="flex items-center px-3 pt-2">
+            <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center text-primary font-semibold text-sm">
               {student?.name?.charAt(0) || 'U'}
             </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-gray-700">{loading ? 'Loading...' : student?.name}</p>
-              <p className="text-xs text-gray-500">{student?.section ? `Section ${student.section}` : 'Student'}</p>
+            <div className="ml-3 min-w-0">
+              <p className="text-sm font-medium text-foreground truncate">{loading ? 'Loading…' : student?.name}</p>
+              <p className="text-xs text-muted-foreground">{student?.section ? `Section ${student.section}` : 'Student'}</p>
             </div>
           </div>
         </div>
@@ -92,12 +100,12 @@ export default function MainLayout() {
 
       {/* Main content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8">
-          <h1 className="text-xl font-semibold text-gray-800">
-            {navigation.find(n => n.href === pathname)?.name || 'Career OS'}
+        <header className="h-14 bg-card border-b border-border flex items-center px-8">
+          <h1 className="text-[15px] font-medium text-foreground">
+            {navigation.find(n => n.href === pathname)?.name || 'Career Wing'}
           </h1>
         </header>
-        
+
         <main className="flex-1 overflow-y-auto p-8">
           <Outlet />
         </main>
