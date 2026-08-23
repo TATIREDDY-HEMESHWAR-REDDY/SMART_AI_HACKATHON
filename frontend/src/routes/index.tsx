@@ -16,6 +16,12 @@ import CodingDashboard from '@/pages/career/coding/CodingDashboard';
 import ProblemWorkspace from '@/pages/career/coding/ProblemWorkspace';
 import ResumeBuilder from '@/pages/career/resume/ResumeBuilder';
 
+import InterviewDashboard from '@/pages/career/interview/InterviewDashboard';
+import InterviewSetup from '@/pages/career/interview/InterviewSetup';
+import InterviewSession from '@/pages/career/interview/InterviewSession';
+import InterviewReview from '@/pages/career/interview/InterviewReview';
+import InterviewHistory from '@/pages/career/interview/InterviewHistory';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -24,6 +30,7 @@ export default function AppRoutes() {
       {/* Standalone assessment route (no layout) */}
       <Route path="/career/assessments/:id/attempt" element={<AssessmentAttempt />} />
       <Route path="/career/coding/problems/:slug" element={<ProblemWorkspace />} />
+      <Route path="/career/interview/session/:id" element={<InterviewSession />} />
       
       <Route path="/career" element={<MainLayout />}>
         <Route index element={<CareerDashboard />} />
@@ -41,6 +48,13 @@ export default function AppRoutes() {
         
         {/* Placeholders for future phases */}
         <Route path="resume" element={<ResumeBuilder />} />
+        
+        {/* Interview Module */}
+        <Route path="interview" element={<InterviewDashboard />} />
+        <Route path="interview/setup" element={<InterviewSetup />} />
+        <Route path="interview/history" element={<InterviewHistory />} />
+        <Route path="interview/:id/review" element={<InterviewReview />} />
+
         <Route path="jobs" element={<div className="p-4">Jobs Module (Phase 7)</div>} />
         <Route path="roadmap" element={<div className="p-4">Roadmap Module (Phase 8)</div>} />
         <Route path="coach" element={<div className="p-4">AI Coach Module (Phase 8)</div>} />

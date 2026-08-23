@@ -21,6 +21,7 @@ const navigation = [
   { name: 'Communication', href: '/career/communication', icon: MessageSquare },
   { name: 'Coding', href: '/career/coding', icon: Code2 },
   { name: 'Resume', href: '/career/resume', icon: FileText },
+  { name: 'Interview', href: '/career/interview', icon: Bot },
   { name: 'Jobs', href: '/career/jobs', icon: Briefcase },
   { name: 'Roadmap', href: '/career/roadmap', icon: Map },
   { name: 'AI Coach', href: '/career/coach', icon: Bot },
