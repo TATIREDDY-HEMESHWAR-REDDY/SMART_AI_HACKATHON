@@ -1,17 +1,15 @@
 # Dependencies
 node_modules/
-.pnpm-store/
 jspm_packages/
 web_modules/
 
 # Build outputs
+.next/
 dist/
 build/
-.next/
 out/
-.turbo/
-apps/web/dist/
 apps/api/dist/
+apps/web/dist/
 
 # Environment variables & secrets
 .env
@@ -19,19 +17,50 @@ apps/api/dist/
 .env.development.local
 .env.test.local
 .env.production.local
-*.env
 !.env.example
+*.key
+*.pem
+*.pub
 
-# Debug logs
+# Database
+/prisma/dev.db
+/prisma/dev.db-journal
+campusos/data/*.db
+campusos/data/*.db-journal
+
+# Prisma & Local database
+/apps/api/keys/
+/services/credentials/keys/
+
+# Python virtual environments & caches
+.venv/
+venv/
+env/
+__pycache__/
+*.pyc
+*.pyd
+*.pyo
+*.cover
+.Python
+.cache/
+.coverage
+.pytest_cache/
+.tox/
+coverage.xml
+nosetests.xml
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# Editor directories and files
-.idea/
+# Editor
 .vscode/
+.idea/
 *.suo
 *.ntvs*
 *.njsproj
@@ -39,34 +68,6 @@ lerna-debug.log*
 *.sw?
 .DS_Store
 
-# Python virtual environments & caches
-__pycache__/
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.venv/
-pip-log.txt
-pip-delete-this-directory.txt
-.tox/
-.coverage
-.cache/
-nosetests.xml
-coverage.xml
-*.cover
-.pytest_cache/
-
-# Prisma & Local database
-/prisma/dev.db
-/prisma/dev.db-journal
-campusos/data/*.db
-campusos/data/*.db-journal
-
-# Compiled credentials & temporary keys
-*.pem
-*.key
-*.pub
-/apps/api/keys/
-/services/credentials/keys/
+# Turbo / pnpm
+.turbo/
+.pnpm-store/

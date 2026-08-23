@@ -1,0 +1,6 @@
+import re
+with open('backend/test_ai_coach.py', 'r') as f:
+    code = f.read()
+code = code.replace('assert res.status_code == 200', 'assert res.status_code == 200, res.text')
+with open('backend/test_ai_coach.py', 'w') as f:
+    f.write(code)
