@@ -21,3 +21,6 @@ api_router.include_router(assessments_router, prefix="/career", tags=["Career As
 api_router.include_router(coding_router, prefix="/career/coding", tags=["Career Coding"])
 api_router.include_router(resume_router, prefix="/career/resume", tags=["Career Resume"])
 api_router.include_router(interview_router, prefix="/career/interviews", tags=["Career Interviews"])
+
+from app.career.jobs.router import router as jobs_router
+api_router.include_router(jobs_router, prefix="/career", tags=["Career Jobs & Applications"])

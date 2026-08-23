@@ -14,3 +14,4 @@ from app.career.resume.models import (
     ResumeActivity, ResumeAnalysis
 )
 from app.career.interview.models import InterviewSession, InterviewQuestion, InterviewResponse
+from app.career.jobs.models import Job, SavedJob, JobApplication, JobMatch, ApplicationActivity
