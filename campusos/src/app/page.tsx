@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { Activity, AlertTriangle, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, CheckCircle2, ChevronRight, Code2, GraduationCap, LayoutDashboard, LogOut, Menu, Sparkles, Users, Trash2, CreditCard, ShieldAlert, Heart, Home as HomeIcon } from 'lucide-react';
+import { Activity, AlertTriangle, ArrowUpRight, Bell, BookOpen, BriefcaseBusiness, CalendarDays, CheckCircle2, ChevronRight, Code2, GraduationCap, LayoutDashboard, LogOut, Menu, Sparkles, Users, Trash2, CreditCard, ShieldAlert, Heart, Home as HomeIcon, User2 } from 'lucide-react';
 import { Cell, Line, LineChart, Pie, PieChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 type User = { username: string; role: 'STUDENT' | 'TEACHER' | 'ADMIN' | 'WARDEN' | 'PARENT'; fullName: string; section?: string | null; mustResetPassword?: number };
@@ -18,7 +18,9 @@ const nav = [
   ['Hostel / Transport', HomeIcon],
   ['Safety Hub', ShieldAlert],
   ['Wellbeing', Heart],
-  ['AI Insights', Sparkles]
+  ['AI Insights', Sparkles],
+  ['Career Portal', BriefcaseBusiness],
+  ['My Profile', User2]
 ];
 const percentage = (a: number, b: number) => Math.round((a / b) * 100);
 
@@ -51,9 +53,12 @@ function Login({ onSuccess }: { onSuccess: (user: User) => void }) {
 
 function StudentDashboard({ user, data, logout, page, setPage, updateData }: { user: User; data: Overview; logout: () => void; page: string; setPage: (page: string) => void; updateData: (next: Overview) => void }) {
   const overall = Math.round(data.attendance.reduce((sum, item) => sum + item.attended, 0) * 100 / data.attendance.reduce((sum, item) => sum + item.total, 0));
-  return <main className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark">C</div>CampusOS</div><div className="workspace-label">STUDENT WORKSPACE</div><nav>{nav.map(([label, Icon]) => <button onClick={() => setPage(label as string)} className={page === label ? 'nav-item active' : 'nav-item'} key={label as string}><Icon size={18}/>{label as string}{label === 'AI Insights' && <span className="new-dot">3</span>}</button>)}</nav><div className="sidebar-bottom"><button className="nav-item"><Bell size={18}/>Notifications<span className="new-dot">2</span></button><button className="profile-button" onClick={() => setPage('Dashboard')}><span className="avatar">AS</span><span><b>{user.fullName}</b><small>Student · CSE</small></span></button></div></aside><section className="content"><header className="topbar"><button className="icon-button"><Menu size={20}/></button><div className="breadcrumbs">Student workspace <ChevronRight size={15}/> <b>{page}</b></div><div className="top-actions"><button className="icon-button"><Bell size={19}/><i/></button><button className="logout" onClick={logout}><LogOut size={16}/> Sign out</button></div></header><div className="page">{page === 'Dashboard' ? <><div className="welcome"><div><span className="eyebrow">TUESDAY, AUGUST 22</span><h1>Good morning, {user.fullName.split(' ')[0]}</h1><p>Here’s the signal from your academic and career journey today.</p></div><button className="outline-button" onClick={() => setPage('Calendar')}><CalendarDays size={17}/> View calendar</button></div>
+  const todayLabel = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }).toUpperCase();
+  const initials = user.fullName.split(' ').map(n => n[0]).join('').substring(0, 2);
+  return <main className="app-shell"><aside className="sidebar"><div className="brand"><div className="brand-mark">C</div>CampusOS</div><div className="workspace-label">STUDENT WORKSPACE</div><nav>{nav.map(([label, Icon]) => <button onClick={() => setPage(label as string)} className={page === label ? 'nav-item active' : 'nav-item'} key={label as string}><Icon size={18}/>{label as string}{label === 'AI Insights' && <span className="new-dot">3</span>}</button>)}</nav><div className="sidebar-bottom"><button className="nav-item" onClick={() => setPage('Notifications')}><Bell size={18}/>Notifications<span className="new-dot">{(data.announcements ?? []).length}</span></button><button className="profile-button" onClick={() => setPage('My Profile')}><span className="avatar">{initials}</span><span><b>{user.fullName}</b><small>Student · CSE · Section {user.section || '—'}</small></span></button></div></aside><section className="content"><header className="topbar"><button className="icon-button"><Menu size={20}/></button><div className="breadcrumbs">Student workspace <ChevronRight size={15}/> <b>{page}</b></div><div className="top-actions"><button className="icon-button" onClick={() => setPage('Notifications')}><Bell size={19}/><i/></button><button className="logout" onClick={logout}><LogOut size={16}/> Sign out</button></div></header><div className="page">{page === 'Dashboard' ? <><div className="welcome"><div><span className="eyebrow">{todayLabel}</span><h1>Good morning, {user.fullName.split(' ')[0]}</h1><p>Here is the signal from your academic and career journey today.</p></div><button className="outline-button" onClick={() => setPage('Calendar')}><CalendarDays size={17}/> View calendar</button></div>
+  <div style={{display:'flex',gap:'8px',marginBottom:'16px'}}><span style={{background:'#eef4ff',color:'#2868cc',padding:'4px 12px',borderRadius:'8px',fontSize:'13px',fontWeight:'bold'}}>{'Section '}{user.section || '—'}</span><span style={{background:'#f0fdf4',color:'#16a34a',padding:'4px 12px',borderRadius:'8px',fontSize:'13px',fontWeight:'bold'}}>{'Semester '}{data.academics.semester}</span><span style={{background:'#faf5ff',color:'#7c3aed',padding:'4px 12px',borderRadius:'8px',fontSize:'13px',fontWeight:'bold'}}>{'CGPA '}{data.academics.cgpa}</span></div>
   <TimetableWidget today={data.timetable} week={data.weekTimetable} />
-  <AnnouncementsFeed announcements={data.announcements} /><section className="metric-grid" style={{ gridTemplateColumns: '1fr' }}><article className="metric-card"><span>Overall attendance</span><strong className={overall < 75 ? 'warning-text' : ''}>{overall}%</strong><small className="warning-text">1 subject needs attention</small></article></section><section className="two-column" style={{ gridTemplateColumns: '1fr' }}><article className="card"><div className="card-heading"><div><span className="eyebrow">ATTENDANCE</span><h2>Keep your buffer healthy</h2></div><button onClick={() => setPage('Attendance')}>Details <ChevronRight size={16}/></button></div><div className="attendance-list">{data.attendance.map(subject => <div className="attendance-row" key={subject.subject}><div><b>{subject.subject}</b><small>{subject.attended} of {subject.total} classes</small></div><div className="attendance-number"><b className={subject.percentage < 75 ? 'warning-text' : ''}>{subject.percentage}%</b><span className={subject.trend < 0 ? 'down' : 'up'}>{subject.trend > 0 ? '↑' : '↓'} {Math.abs(subject.trend)}%</span></div></div>)}</div></article></section></> : page === 'Attendance' ? <AttendancePage data={data} /> : page === 'Exams & Marks' ? <MarksPage data={data} setPage={setPage} /> : page === 'Calendar' ? <CalendarPage user={user} /> : page === 'Fees' ? <FeesPage user={user} data={data} updateData={updateData} /> : page === 'Hostel / Transport' ? <HostelTransportPage user={user} data={data} /> : page === 'Safety Hub' ? <SafetyHubPage user={user} /> : page === 'Wellbeing' ? <WellbeingPage user={user} /> : page === 'AI Insights' ? <AIInsightsPage /> : <ComingSoon title={page} />}</div></section></main>;
+  <AnnouncementsFeed announcements={data.announcements} /><section className="metric-grid" style={{ gridTemplateColumns: '1fr' }}><article className="metric-card"><span>Overall attendance</span><strong className={overall < 75 ? 'warning-text' : ''}>{overall}%</strong><small className="warning-text">1 subject needs attention</small></article></section><section className="two-column" style={{ gridTemplateColumns: '1fr' }}><article className="card"><div className="card-heading"><div><span className="eyebrow">ATTENDANCE</span><h2>Keep your buffer healthy</h2></div><button onClick={() => setPage('Attendance')}>Details <ChevronRight size={16}/></button></div><div className="attendance-list">{data.attendance.map(subject => <div className="attendance-row" key={subject.subject}><div><b>{subject.subject}</b><small>{subject.attended} of {subject.total} classes</small></div><div className="attendance-number"><b className={subject.percentage < 75 ? 'warning-text' : ''}>{subject.percentage}%</b><span className={subject.trend < 0 ? 'down' : 'up'}>{subject.trend > 0 ? '↑' : '↓'} {Math.abs(subject.trend)}%</span></div></div>)}</div></article></section></> : page === 'Attendance' ? <AttendancePage data={data} /> : page === 'Exams & Marks' ? <MarksPage data={data} setPage={setPage} /> : page === 'Calendar' ? <CalendarPage user={user} /> : page === 'Fees' ? <FeesPage user={user} data={data} updateData={updateData} /> : page === 'Hostel / Transport' ? <HostelTransportPage user={user} data={data} /> : page === 'Safety Hub' ? <SafetyHubPage user={user} /> : page === 'Wellbeing' ? <WellbeingPage user={user} /> : page === 'AI Insights' ? <AIInsightsPage /> : page === 'My Profile' ? <ProfilePage user={user} data={data} setPage={setPage} /> : page === 'Career Portal' ? <CareerPortalPage user={user} data={data} /> : page === 'Notifications' ? <NotificationsPage announcements={data.announcements} /> : <ComingSoon title={page} />}</div></section></main>;
 }
 
 function SectionHeader({ label, title, text }: { label: string; title: string; text: string }) { return <div className="section-header"><span className="eyebrow blue">{label}</span><h1>{title}</h1><p>{text}</p></div>; }
@@ -200,6 +205,8 @@ function CalendarPage({ user }: { user: User }) {
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ title: '', type: 'HOLIDAY', date: '', description: '', section: '' });
   const [msg, setMsg] = useState('');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const loadEvents = () => {
     fetch('/api/calendar')
@@ -232,8 +239,105 @@ function CalendarPage({ user }: { user: User }) {
     if (res.ok) loadEvents();
   }
 
+  const eventsByDate = new Map<string, any[]>();
+  events.forEach(ev => {
+    const key = ev.date?.split('T')[0];
+    if (key) eventsByDate.set(key, [...(eventsByDate.get(key) ?? []), ev]);
+  });
+
+  function renderMonth(year: number, month: number) {
+    const first = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const startDay = first.getDay();
+    const monthName = first.toLocaleString('default', { month: 'long' });
+    const cells: (number | null)[] = Array(startDay).fill(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    return (
+      <div key={`${year}-${month}`} style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e4eaf2', padding: '16px', minWidth: 0 }}>
+        <h3 style={{ fontSize: '15px', fontWeight: 'bold', color: '#0f172a', marginBottom: '10px', textAlign: 'center' }}>{monthName} {year}</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '2px', fontSize: '12px', textAlign: 'center' }}>
+          {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => <span key={d} style={{ fontWeight: 'bold', color: '#94a3b8', padding: '4px 0' }}>{d}</span>)}
+          {cells.map((day, i) => {
+            if (day === null) return <span key={i} />;
+            const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayEvents = eventsByDate.get(dateStr);
+            const today = new Date();
+            const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+            return (
+              <span key={i} title={dayEvents?.map(e => `${e.type}: ${e.title}`).join('\n') ?? ''} onClick={() => setSelectedDate(dateStr)} style={{
+                padding: '4px 0', borderRadius: '6px', cursor: 'pointer', position: 'relative',
+                background: selectedDate === dateStr ? '#1e40af' : isToday ? '#2868cc' : dayEvents ? (dayEvents.some((e: any) => e.type === 'EXAM') ? '#fef2f2' : '#f0fdf4') : 'transparent',
+                color: selectedDate === dateStr ? '#fff' : isToday ? '#fff' : dayEvents ? (dayEvents.some((e: any) => e.type === 'EXAM') ? '#dc2626' : '#16a34a') : '#334155',
+                fontWeight: dayEvents || isToday || selectedDate === dateStr ? 'bold' : 'normal',
+                outline: selectedDate === dateStr ? '2px solid #2868cc' : 'none', outlineOffset: '1px'
+              }}>
+                {day}
+                {dayEvents && <span style={{ position: 'absolute', bottom: '1px', left: '50%', transform: 'translateX(-50%)', width: '4px', height: '4px', borderRadius: '50%', background: dayEvents.some((e: any) => e.type === 'EXAM') ? '#dc2626' : '#16a34a' }} />}
+              </span>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
+  function renderSixMonths() {
+    const today = new Date();
+    const months: { year: number; month: number }[] = [];
+    for (let i = 0; i < 6; i++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + i, 1);
+      months.push({ year: d.getFullYear(), month: d.getMonth() });
+    }
+    return (
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        {months.map(m => renderMonth(m.year, m.month))}
+      </div>
+    );
+  }
+
   return (
     <><SectionHeader label="ACADEMIC CALENDAR" title="Schedule and Events" text="Keep track of upcoming college holidays, examinations, and major section events."/>
+      <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', alignItems: 'center' }}>
+        <button className={showCalendar ? 'primary-button' : 'outline-button'} onClick={() => setShowCalendar(!showCalendar)} style={{ padding: '8px 16px', fontSize: '14px' }}>
+          <CalendarDays size={16} style={{ marginRight: '6px', verticalAlign: 'middle' }} />{showCalendar ? 'Hide calendar' : '6 Month View'}
+        </button>
+        {showCalendar && (
+          <div style={{ display: 'flex', gap: '12px', fontSize: '12px', color: '#64748b', alignItems: 'center' }}>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }} /> Holiday</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#dc2626', display: 'inline-block' }} /> Exam</span>
+            <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2868cc', display: 'inline-block' }} /> Today</span>
+          </div>
+        )}
+      </div>
+      {showCalendar && renderSixMonths()}
+      {selectedDate && (
+        <article className="card" style={{ marginBottom: '24px', border: '1px solid #2868cc' }}>
+          <div className="card-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div><span className="eyebrow blue">SELECTED DATE</span><h2>{new Date(selectedDate + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}</h2></div>
+            <button onClick={() => setSelectedDate(null)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>{'×'}</button>
+          </div>
+          <div style={{ padding: '20px' }}>
+            {eventsByDate.get(selectedDate)?.length ? (
+              <div style={{ display: 'grid', gap: '12px' }}>
+                {eventsByDate.get(selectedDate)!.map((ev: any) => (
+                  <div key={ev.id} style={{ display: 'flex', gap: '16px', alignItems: 'center', background: ev.type === 'EXAM' ? '#fef2f2' : '#f0fdf4', padding: '16px', borderRadius: '12px', border: `1px solid ${ev.type === 'EXAM' ? '#fecaca' : '#bbf7d0'}` }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: ev.type === 'EXAM' ? '#dc2626' : '#16a34a', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '11px', flexShrink: 0 }}>{ev.type}</div>
+                    <div>
+                      <strong style={{ display: 'block', fontSize: '15px', color: '#0f172a' }}>{ev.title}</strong>
+                      {ev.description && <p style={{ fontSize: '13px', color: '#475569', margin: '4px 0 0' }}>{ev.description}</p>}
+                      {ev.section && <span style={{ fontSize: '11px', color: '#b45309', background: '#fffbeb', padding: '2px 6px', borderRadius: '6px', marginTop: '6px', display: 'inline-block' }}>Section {ev.section}</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p style={{ color: '#64748b', textAlign: 'center', padding: '12px 0' }}>No events scheduled for this date.</p>
+            )}
+          </div>
+        </article>
+      )}
       <div className="module-grid" style={{ gridTemplateColumns: user.role === 'ADMIN' ? '1.5fr 1fr' : '1fr', gap: '24px' }}>
         <article className="card">
           <div className="card-heading"><div><span className="eyebrow">EVENTS</span><h2>Upcoming dates ({events.length})</h2></div></div>
@@ -634,7 +738,178 @@ function WellbeingPage({ user }: { user: User }) {
   );
 }
 
+function NotificationsPage({ announcements }: { announcements?: Announcement[] }) {
+  return (
+    <>
+      <SectionHeader label="NOTIFICATIONS" title="Your Notifications" text="Announcements and updates from teachers and administration." />
+      <div style={{ display: 'grid', gap: '14px', marginTop: '16px' }}>
+        {(!announcements || announcements.length === 0) ? (
+          <div className="card" style={{ padding: '40px', color: '#64748b', textAlign: 'center' }}>No notifications right now. Check back later.</div>
+        ) : announcements.map(item => (
+          <article className="card" key={item.id} style={{ padding: '20px 24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <Bell size={16} style={{ color: '#2868cc' }} />
+                <span className="badge good">{item.section ? `Section ${item.section}` : 'Campus-wide'}</span>
+              </div>
+              <span style={{ fontSize: '12px', color: '#64748b' }}>{new Date(item.createdAt).toLocaleString()}</span>
+            </div>
+            <strong style={{ display: 'block', fontSize: '16px', color: '#0f172a', marginBottom: '6px' }}>{item.title}</strong>
+            <p style={{ fontSize: '14px', color: '#475569', margin: 0, lineHeight: '1.5' }}>{item.message}</p>
+            <span style={{ fontSize: '12px', color: '#94a3b8', marginTop: '10px', display: 'block' }}>{item.authorName} · {item.authorRole === 'ADMIN' ? 'Administration' : 'Faculty'}</span>
+          </article>
+        ))}
+      </div>
+    </>
+  );
+}
+
+function ProfilePage({ user, data, setPage }: { user: User; data: Overview; setPage: (p: string) => void }) {
+  const [profile, setProfile] = useState(data.profile);
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState({ phone: profile?.phone || '', linkedin: profile?.linkedin || '', github: profile?.github || '', portfolio: profile?.portfolio || '', targetRole: profile?.targetRole || '' });
+  const [msg, setMsg] = useState('');
+
+  async function saveProfile(e: FormEvent) {
+    e.preventDefault(); setMsg('');
+    const res = await fetch('/api/student/profile', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form) });
+    if (res.ok) {
+      const updated = await res.json();
+      setProfile(updated);
+      setEditing(false);
+      setMsg('Profile updated successfully.');
+    } else {
+      setMsg('Failed to update profile.');
+    }
+  }
+
+  const overall = Math.round(data.attendance.reduce((s, r) => s + r.attended, 0) * 100 / data.attendance.reduce((s, r) => s + r.total, 0));
+
+  return (
+    <>
+      <SectionHeader label="MY PROFILE" title={user.fullName} text="Your academic identity and personal information." />
+      <div className="module-grid" style={{ gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+        <article className="card">
+          <div className="card-heading"><div><span className="eyebrow">ACADEMIC IDENTITY</span><h2>Student Information</h2></div></div>
+          <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Full Name</span><strong style={{ fontSize: '16px', color: '#0f172a' }}>{user.fullName}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Username</span><strong style={{ fontSize: '16px', color: '#0f172a' }}>{user.username}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Section</span><strong style={{ fontSize: '16px', color: '#2868cc' }}>{user.section || '—'}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Semester</span><strong style={{ fontSize: '16px', color: '#0f172a' }}>{data.academics.semester}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>CGPA</span><strong style={{ fontSize: '20px', color: '#2868cc' }}>{data.academics.cgpa}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>SGPA</span><strong style={{ fontSize: '20px', color: '#0f172a' }}>{data.academics.sgpa}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Credits Completed</span><strong style={{ fontSize: '16px' }}>{data.academics.creditsCompleted} / {data.academics.creditsCompleted + data.academics.creditsRemaining}</strong></div>
+            <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Overall Attendance</span><strong style={{ fontSize: '20px', color: overall < 75 ? '#ef4444' : '#10b981' }}>{overall}%</strong></div>
+          </div>
+        </article>
+
+        <article className="card">
+          <div className="card-heading" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div><span className="eyebrow">PERSONAL DETAILS</span><h2>Contact & Career</h2></div>
+            <button className="outline-button" onClick={() => setEditing(!editing)} style={{ padding: '6px 14px', fontSize: '13px' }}>{editing ? 'Cancel' : 'Edit'}</button>
+          </div>
+          {editing ? (
+            <form className="admin-form" onSubmit={saveProfile} style={{ padding: '24px' }}>
+              <label>Phone<input value={form.phone} onChange={e => setForm({ ...form, phone: e.target.value })} placeholder="Phone number" /></label>
+              <label>LinkedIn<input value={form.linkedin} onChange={e => setForm({ ...form, linkedin: e.target.value })} placeholder="LinkedIn URL" /></label>
+              <label>GitHub<input value={form.github} onChange={e => setForm({ ...form, github: e.target.value })} placeholder="GitHub URL" /></label>
+              <label>Portfolio<input value={form.portfolio} onChange={e => setForm({ ...form, portfolio: e.target.value })} placeholder="Portfolio URL" /></label>
+              <label>Target Role<input value={form.targetRole} onChange={e => setForm({ ...form, targetRole: e.target.value })} placeholder="e.g. Software Engineer" /></label>
+              <button className="primary-button" style={{ marginTop: '8px' }}>Save Profile</button>
+            </form>
+          ) : (
+            <div style={{ padding: '24px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+              <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Phone</span><strong style={{ fontSize: '15px' }}>{profile?.phone || 'Not set'}</strong></div>
+              <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Target Role</span><strong style={{ fontSize: '15px' }}>{profile?.targetRole || 'Not set'}</strong></div>
+              <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>LinkedIn</span><strong style={{ fontSize: '14px', wordBreak: 'break-all' }}>{profile?.linkedin || 'Not set'}</strong></div>
+              <div><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>GitHub</span><strong style={{ fontSize: '14px', wordBreak: 'break-all' }}>{profile?.github || 'Not set'}</strong></div>
+              <div style={{ gridColumn: 'span 2' }}><span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase' }}>Portfolio</span><strong style={{ fontSize: '14px', wordBreak: 'break-all' }}>{profile?.portfolio || 'Not set'}</strong></div>
+              <div style={{ gridColumn: 'span 2', background: '#f8fafc', padding: '14px', borderRadius: '10px', border: '1px solid #e4eaf2' }}>
+                <span style={{ fontSize: '11px', color: '#64748b', display: 'block', textTransform: 'uppercase', marginBottom: '6px' }}>Profile Completion</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <div style={{ flex: 1, height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}><div style={{ width: `${profile?.completion || 0}%`, height: '100%', background: '#2868cc' }} /></div>
+                  <strong style={{ color: '#2868cc' }}>{profile?.completion || 0}%</strong>
+                </div>
+              </div>
+            </div>
+          )}
+          {msg && <p className="form-message" style={{ padding: '0 24px 16px' }}>{msg}</p>}
+        </article>
+      </div>
+
+      <div className="two-column" style={{ marginTop: '24px' }}>
+        <article className="card">
+          <div className="card-heading"><div><span className="eyebrow">SKILLS</span><h2>Your skill inventory ({data.skills.length})</h2></div></div>
+          <div style={{ display: 'grid', gap: '10px', padding: '24px' }}>
+            {data.skills.map(skill => (
+              <div key={skill.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#f8fafc', padding: '12px 16px', borderRadius: '10px', border: '1px solid #e4eaf2' }}>
+                <div><strong style={{ fontSize: '14px', color: '#0f172a' }}>{skill.name}</strong><span style={{ fontSize: '12px', color: '#64748b', marginLeft: '8px' }}>{skill.level}</span></div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ width: '80px', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}><div style={{ width: `${skill.score}%`, height: '100%', background: skill.score >= 80 ? '#10b981' : skill.score >= 50 ? '#f59e0b' : '#ef4444' }} /></div>
+                  <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#0f172a' }}>{skill.score}%</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+        <article className="card">
+          <div className="card-heading"><div><span className="eyebrow">CAREER PIPELINE</span><h2>Tracked opportunities ({data.opportunities.length})</h2></div></div>
+          <div style={{ display: 'grid', gap: '10px', padding: '24px' }}>
+            {data.opportunities.map(opp => (
+              <div key={opp.company} style={{ background: '#f8fafc', padding: '14px 16px', borderRadius: '10px', border: '1px solid #e4eaf2' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div><strong style={{ fontSize: '14px', color: '#0f172a' }}>{opp.company}</strong><span style={{ fontSize: '12px', color: '#64748b', display: 'block' }}>{opp.role} · {opp.package}</span></div>
+                  <span className={opp.matchScore >= 80 ? 'badge good' : 'badge warning'}>{opp.matchScore}% match</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', fontSize: '12px', color: '#64748b' }}>
+                  <span>Deadline: {opp.deadline}</span>
+                  {opp.gap && <span style={{ color: '#f59e0b' }}>Gap: {opp.gap}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        </article>
+      </div>
+    </>
+  );
+}
+
 function ComingSoon({ title }: { title: string }) { return <div className="coming-soon"><Sparkles size={28}/><span className="eyebrow">STUDENT WORKSPACE</span><h1>{title}</h1><p>This module is next in the CampusOS build. Your existing data model is already designed to connect here.</p></div>; }
+
+const CAREER_OS_URL = process.env.NEXT_PUBLIC_CAREER_OS_URL || 'http://localhost:5173';
+
+function CareerPortalPage({ user, data }: { user: User; data: Overview }) {
+  const params = new URLSearchParams({
+    name: user.fullName,
+    section: user.section || '',
+    cgpa: String(data.academics.cgpa),
+    semester: String(data.academics.semester),
+  });
+  const careerUrl = `${CAREER_OS_URL}/career?${params.toString()}`;
+
+  return (
+    <>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <div>
+          <span className="eyebrow blue"><BriefcaseBusiness size={14} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '4px' }} /> PLACEMENT PREP</span>
+          <h1 style={{ fontSize: '26px', fontWeight: 'bold', color: '#0f172a', marginTop: '4px' }}>Career OS</h1>
+          <p style={{ color: '#64748b', fontSize: '14px', marginTop: '4px' }}>Assessments, coding practice, resume builder, AI mock interviews and job tracking — all in one place.</p>
+        </div>
+        <a href={careerUrl} target="_blank" rel="noopener noreferrer" className="primary-button" style={{ display: 'flex', alignItems: 'center', gap: '6px', textDecoration: 'none' }}>
+          <ArrowUpRight size={16} /> Open in new tab
+        </a>
+      </div>
+      <div style={{ borderRadius: '16px', overflow: 'hidden', border: '1px solid #e4eaf2', height: 'calc(100vh - 200px)', boxShadow: '0 4px 24px rgba(0,0,0,0.06)' }}>
+        <iframe
+          src={careerUrl}
+          style={{ width: '100%', height: '100%', border: 'none' }}
+          title="Career OS"
+          allow="clipboard-write"
+        />
+      </div>
+    </>
+  );
+}
 function AIInsightsPage() {
   const [insights, setInsights] = useState<{ category: string; status: string; title: string; detail: string; priority: string }[] | null>(null);
   const [error, setError] = useState('');
@@ -645,20 +920,20 @@ function AIInsightsPage() {
     setLoading(true); setError('');
     fetch('/api/student/ai-insights')
       .then(async r => { const body = await r.json(); if (!r.ok) throw new Error(body.error || 'Failed to generate insights.'); return body; })
-      .then(body => { setInsights(body.insights); setGeneratedAt(body.generatedAt); })
-      .catch(err => setError(err.message))
+      .then(body => { setInsights(body.insights); setGeneratedAt(body.generatedAt); setError(''); })
+      .catch(err => setError(insights ? 'Regeneration failed — showing previous results.' : err.message))
       .finally(() => setLoading(false));
   }
   useEffect(() => { load(); }, []);
 
   return (
     <>
-      <SectionHeader label="AI INTELLIGENCE" title="Your personal AI insights" text="Generated live from your attendance, marks, skills and career data by Gemini." />
+      <SectionHeader label="AI INTELLIGENCE" title="Your personal AI insights" text="Generated live from your attendance, marks, skills and career data." />
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '16px', gap: '10px', alignItems: 'center' }}>
         {generatedAt && !loading && <span style={{ fontSize: '12px', color: '#64748b' }}>Generated {new Date(generatedAt).toLocaleTimeString()}</span>}
         <button className="outline-button" onClick={load} disabled={loading}><Sparkles size={16}/> {loading ? 'Thinking...' : 'Regenerate'}</button>
       </div>
-      {error && <div className="form-error" style={{ marginBottom: '16px' }}>{error}</div>}
+      {error && <div style={{ marginBottom: '16px', padding: '10px 16px', borderRadius: '8px', fontSize: '13px', background: insights ? '#fffbeb' : '#fef2f2', color: insights ? '#92400e' : '#dc2626', border: `1px solid ${insights ? '#fde68a' : '#fecaca'}` }}>{error}</div>}
       {loading && !insights ? (
         <p style={{ color: '#64748b' }}>Analyzing your academic and career data...</p>
       ) : (
@@ -1421,7 +1696,15 @@ function RolePlaceholder({ user, logout }: { user: User; logout: () => void }) {
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null); const [data, setData] = useState<Overview | null>(null); const [page, setPage] = useState('Dashboard');
-  useEffect(() => { const saved = localStorage.getItem('campusos-user'); if (saved) setUser(JSON.parse(saved)); }, []);
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).has('onboard')) {
+      localStorage.removeItem('campusos-user');
+      document.cookie = 'campusos-session=; path=/; max-age=0';
+      window.history.replaceState({}, '', '/');
+      return;
+    }
+    const saved = localStorage.getItem('campusos-user'); if (saved) setUser(JSON.parse(saved));
+  }, []);
   useEffect(() => { if (user?.role === 'STUDENT') fetch('/api/student/overview').then(r => r.json()).then(setData); }, [user]);
   const logout = () => { localStorage.removeItem('campusos-user'); setUser(null); setData(null); setPage('Dashboard'); };
   if (!user) return <Login onSuccess={setUser}/>;

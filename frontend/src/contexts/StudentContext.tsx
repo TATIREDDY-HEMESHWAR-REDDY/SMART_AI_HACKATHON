@@ -23,6 +23,22 @@ interface StudentContextType {
 
 const StudentContext = createContext<StudentContextType | undefined>(undefined);
 
+// Read student identity passed as URL params from the CampusOS ERP.
+// URL shape: /career?name=John+Doe&section=A1&cgpa=8.4&semester=4
+function readERPParams(): Partial<Student> | null {
+  const params = new URLSearchParams(window.location.search);
+  const name = params.get('name');
+  if (!name) return null;
+  return {
+    name,
+    section: params.get('section') ?? undefined,
+    cgpa: params.get('cgpa') ? Number(params.get('cgpa')) : undefined,
+    semester: params.get('semester') ? Number(params.get('semester')) : undefined,
+  };
+}
+
+const ERP_STUDENT_KEY = 'career_os_erp_student';
+
 export function StudentProvider({ children }: { children: ReactNode }) {
   const [student, setStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -31,15 +47,35 @@ export function StudentProvider({ children }: { children: ReactNode }) {
   const fetchStudent = async () => {
     try {
       setLoading(true);
-      // For now we mock the API response, later this will be /api/v1/auth/me or similar
-      const response = await api.get('/health'); // Using health just to check connection
+
+      // 1 · ERP handoff via URL params (takes priority)
+      const erpParams = readERPParams();
+      if (erpParams) {
+        const erp: Student = {
+          id: 'erp-student',
+          email: '',
+          name: erpParams.name ?? 'Student',
+          section: erpParams.section,
+          cgpa: erpParams.cgpa,
+          semester: erpParams.semester,
+        };
+        setStudent(erp);
+        // Persist so navigating within Career OS keeps the identity
+        sessionStorage.setItem(ERP_STUDENT_KEY, JSON.stringify(erp));
+        return;
+      }
+
+      // 2 · Already stored from a previous ERP handoff this session
+      const stored = sessionStorage.getItem(ERP_STUDENT_KEY);
+      if (stored) {
+        setStudent(JSON.parse(stored));
+        return;
+      }
+
+      // 3 · Fallback: check API connection then use mock
+      const response = await api.get('/health');
       if (response.data) {
-         setStudent({
-            id: 'STU10045',
-            name: 'Sameer (Mock)',
-            email: 'sameer@demo.com',
-            cgpa: 8.4
-         });
+        setStudent({ id: 'STU10045', name: 'Sameer (Mock)', email: 'sameer@demo.com', cgpa: 8.4 });
       }
     } catch (err) {
       setError('Failed to fetch student data');

@@ -1,16 +1,19 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  User, 
-  Code2, 
-  Briefcase, 
-  FileText, 
-  Map, 
-  Bot, 
+import {
+  LayoutDashboard,
+  User,
+  Code2,
+  Briefcase,
+  FileText,
+  Map,
+  Bot,
   Activity,
   Target,
-  MessageSquare
+  MessageSquare,
+  ArrowLeft
 } from 'lucide-react';
+
+const ERP_URL = import.meta.env.VITE_ERP_URL || 'http://localhost:3001';
 import { useStudent } from '@/contexts/StudentContext';
 
 const navigation = [
@@ -67,14 +70,21 @@ export default function MainLayout() {
           })}
         </nav>
 
-        <div className="p-4 border-t border-gray-200">
+        <div className="p-4 border-t border-gray-200 space-y-3">
+          <a
+            href={ERP_URL}
+            className="flex items-center gap-2 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 rounded-md transition-colors w-full"
+          >
+            <ArrowLeft className="h-4 w-4 text-gray-400" />
+            Back to CampusOS ERP
+          </a>
           <div className="flex items-center">
             <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-bold">
               {student?.name?.charAt(0) || 'U'}
             </div>
             <div className="ml-3">
               <p className="text-sm font-medium text-gray-700">{loading ? 'Loading...' : student?.name}</p>
-              <p className="text-xs text-gray-500">Student</p>
+              <p className="text-xs text-gray-500">{student?.section ? `Section ${student.section}` : 'Student'}</p>
             </div>
           </div>
         </div>
