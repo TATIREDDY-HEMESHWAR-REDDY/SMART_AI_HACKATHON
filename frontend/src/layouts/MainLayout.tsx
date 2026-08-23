@@ -23,6 +23,7 @@ const navigation = [
   { name: 'Resume', href: '/career/resume', icon: FileText },
   { name: 'Interview', href: '/career/interview', icon: Bot },
   { name: 'Jobs', href: '/career/jobs', icon: Briefcase },
+  { name: 'Applications', href: '/career/applications', icon: FileText },
   { name: 'Roadmap', href: '/career/roadmap', icon: Map },
   { name: 'AI Coach', href: '/career/coach', icon: Bot },
   { name: 'Analytics', href: '/career/analytics', icon: Activity },

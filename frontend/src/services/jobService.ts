@@ -111,4 +111,22 @@ export const jobService = {
     });
     return response.data;
   },
+
+  getApplication: async (id: number) => {
+    const response = await api.get<JobApplication>(`/career/applications/${id}`);
+    return response.data;
+  },
+
+  updateApplicationStatus: async (id: number, status: string) => {
+    const response = await api.patch<JobApplication>(`/career/applications/${id}`, { status });
+    return response.data;
+  },
+
+  addApplicationActivity: async (id: number, activityType: string, content: string) => {
+    const response = await api.post<ApplicationActivity>(`/career/applications/${id}/activities`, {
+      activity_type: activityType,
+      content,
+    });
+    return response.data;
+  },
 };

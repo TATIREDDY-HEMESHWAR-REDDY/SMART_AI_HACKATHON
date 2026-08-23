@@ -25,6 +25,9 @@ import InterviewHistory from '@/pages/career/interview/InterviewHistory';
 import JobsDashboard from '@/pages/career/jobs/JobsDashboard';
 import JobDetails from '@/pages/career/jobs/JobDetails';
 
+import ApplicationsDashboard from '@/pages/career/jobs/ApplicationsDashboard';
+import ApplicationDetails from '@/pages/career/jobs/ApplicationDetails';
+
 export default function AppRoutes() {
   return (
     <Routes>
@@ -61,6 +64,10 @@ export default function AppRoutes() {
         {/* Jobs Module */}
         <Route path="jobs" element={<JobsDashboard />} />
         <Route path="jobs/:id" element={<JobDetails />} />
+        
+        {/* Applications Tracker */}
+        <Route path="applications" element={<ApplicationsDashboard />} />
+        <Route path="applications/:id" element={<ApplicationDetails />} />
 
         <Route path="roadmap" element={<div className="p-4">Roadmap Module (Phase 8)</div>} />
         <Route path="coach" element={<div className="p-4">AI Coach Module (Phase 8)</div>} />
