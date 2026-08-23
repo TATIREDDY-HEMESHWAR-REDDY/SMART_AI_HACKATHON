@@ -187,6 +187,26 @@ class InterviewService:
         avg_score = sum(scores) / len(scores) if scores else None
         best_score = max(scores) if scores else None
         
+        category_scores = {
+            "TECHNICAL": [],
+            "COMMUNICATION": [],
+            "BEHAVIORAL": [],
+            "PROJECT": []
+        }
+        
+        for s in sessions:
+            for q in s.questions:
+                if q.response and q.response.score is not None:
+                    cat = q.category.upper()
+                    if cat in category_scores:
+                        category_scores[cat].append(q.response.score)
+                        
+        def get_avg(cat: str):
+            scores_list = category_scores.get(cat, [])
+            if not scores_list:
+                return None
+            return sum(scores_list) / len(scores_list)
+        
         history = [
             {
                 "id": s.id,
@@ -206,6 +226,10 @@ class InterviewService:
             "total_interviews": total,
             "average_score": avg_score,
             "best_score": best_score,
+            "technical_average": get_avg("TECHNICAL"),
+            "communication_average": get_avg("COMMUNICATION"),
+            "behavioral_average": get_avg("BEHAVIORAL"),
+            "project_average": get_avg("PROJECT"),
             "history": history
         }
 

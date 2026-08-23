@@ -19,3 +19,5 @@ api_router.include_router(readiness_router, prefix="/career/readiness", tags=["C
 api_router.include_router(progress_router, prefix="/career/progress", tags=["Career Progress"])
 api_router.include_router(assessments_router, prefix="/career", tags=["Career Assessments"])
 api_router.include_router(coding_router, prefix="/career/coding", tags=["Career Coding"])
+api_router.include_router(resume_router, prefix="/career/resume", tags=["Career Resume"])
+api_router.include_router(interview_router, prefix="/career/interviews", tags=["Career Interviews"])
